@@ -39,6 +39,9 @@ const socketEvents = {
   LEAVE_CHAT_EVENT: "leaveChat",
   UPDATE_GROUP_NAME_EVENT: "updateGroupName",
   MESSAGE_DELETE_EVENT: "messageDeleted",
+  ACTIVE_USERS_EVENT: "activeUsers",
+  USER_ONLINE_EVENT: "userOnline",
+  USER_OFFLINE_EVENT: "userOffline",
 };
 
 const SocketProvider = ({ children }) => {

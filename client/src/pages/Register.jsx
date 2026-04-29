@@ -38,7 +38,7 @@ export default function Register() {
   };
 
   return (
-    <div className="w-full h-screen flex overflow-hidden bg-background animate-page-enter">
+    <div className="w-full h-[100dvh] flex overflow-hidden bg-background animate-page-enter">
 
       {/* ── LEFT: Visual Panel ───────────────────────────────────── */}
       <div className="hidden lg:flex w-full lg:w-[55%] xl:w-[58%] h-full relative overflow-hidden items-center justify-center"

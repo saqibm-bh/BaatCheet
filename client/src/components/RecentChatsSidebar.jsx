@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { BiSearch } from "../assets";
-import { LocalStorage } from "../utils";
+import { LocalStorage, getChatObjectMetadata } from "../utils";
 import { useChat } from "../context/ChatContext";
 import RecentUserChatCard from "./RecentUserChatCard";
 import { useAuth } from "../context/AuthContext";
 import { FiPlus } from "react-icons/fi";
 import UserAvatar from "./UserAvatar";
 
-export default function RecentChatsSidebar() {
+export default function RecentChatsSidebar({ isCollapsed, onToggleCollapse }) {
   const {
     currentUserChats,
     loadingChats,
@@ -24,6 +24,7 @@ export default function RecentChatsSidebar() {
     setActiveLeftSidebar,
     unreadCounts,
     resetUnreadCount,
+    onlineUserIds,
   } = useChat();
   const { user } = useAuth();
 
@@ -58,10 +59,8 @@ export default function RecentChatsSidebar() {
           return usernameRegex.test(chat.name || "");
         }
 
-        return (chat.participants || []).some((participant) => {
-          if (participant?._id === user?._id) return false;
-          return usernameRegex.test(participant?.username || "");
-        });
+        const metadata = getChatObjectMetadata(chat, user);
+        return usernameRegex.test(metadata?.title || "");
       })
     );
   };
@@ -77,10 +76,70 @@ export default function RecentChatsSidebar() {
     getCurrentUserChats();
   }, []);
 
+  if (isCollapsed) {
+    return (
+      <div
+        className={`px-2 py-4 w-full h-full flex flex-col bg-background/40 dark:bg-background/20 glass-panel ${
+          isChatSelected ? "hidden md:flex" : "flex"
+        }`}
+      >
+        <div className="flex items-center justify-between px-2 mb-4">
+          <h1 className="text-sm font-semibold text-foreground">Chats</h1>
+          <button
+            type="button"
+            onClick={() => onToggleCollapse?.(false)}
+            className="h-8 w-8 rounded-full bg-muted/60 hover:bg-muted text-foreground flex items-center justify-center"
+            aria-label="Expand sidebar"
+          >
+            <span className="text-lg">&gt;</span>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar pb-4">
+          {(filteredRecentUserChats || []).map((chat) => (
+            <button
+              type="button"
+              key={chat._id}
+              onClick={() => {
+                if (
+                  currentSelectedChat.current?._id &&
+                  currentSelectedChat.current?._id === chat?._id
+                )
+                  return;
+                LocalStorage.set("currentSelectedChat", chat);
+                currentSelectedChat.current = chat;
+                setIsChatSelected(true);
+                setMessages([]);
+                resetUnreadCount(chat?._id);
+                getMessages(currentSelectedChat.current?._id);
+              }}
+              className={`relative w-full flex items-center justify-center p-2 my-1 rounded-2xl transition-all duration-200 ${
+                currentSelectedChat.current?._id === chat._id
+                  ? "bg-primary/10 border border-primary/20"
+                  : "hover:bg-muted/60"
+              }`}
+            >
+              <UserAvatar
+                src={getChatObjectMetadata(chat, user)?.avatar}
+                alt={getChatObjectMetadata(chat, user)?.title}
+                sizeClass="w-11 h-11"
+              />
+              {!!unreadCounts?.[chat._id] && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-[18px] text-center">
+                  {unreadCounts[chat._id] > 99 ? "99+" : unreadCounts[chat._id]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`px-5 py-6 md:p-4 w-full h-full flex flex-col bg-background/40 dark:bg-background/20 glass-panel md:${
-        isChatSelected ? "hidden" : "block"
+      className={`px-5 py-6 md:p-4 w-full h-full flex flex-col bg-background/40 dark:bg-background/20 glass-panel ${
+        isChatSelected ? "hidden md:flex" : "flex"
       }`}
     >
       <div className="flex-shrink-0 sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-3">
@@ -95,6 +154,17 @@ export default function RecentChatsSidebar() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleCollapse?.(true)}
+              data-tooltip="Collapse sidebar"
+              data-tooltip-pos="bottom"
+              className="hci-tooltip h-8 w-8 rounded-full bg-muted/60 hover:bg-muted text-foreground flex items-center justify-center"
+              aria-label="Collapse sidebar"
+            >
+              <span className="text-lg">&lt;</span>
+            </button>
+
             <button
               type="button"
               onClick={() => {
@@ -181,7 +251,9 @@ export default function RecentChatsSidebar() {
                       className="p-[2px] ring-2 ring-primary/60 group-hover:ring-primary transition-all shadow-sm"
                       fallbackClassName="bg-primary/10 text-primary"
                     />
-                    <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+                    {onlineUserIds?.has?.(friend?._id) && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+                    )}
                   </div>
                   <span className="text-[10px] font-medium text-foreground max-w-[50px] truncate">
                     {(friend?.username || "User").split(" ")[0]}
@@ -237,6 +309,7 @@ export default function RecentChatsSidebar() {
                     getMessages(currentSelectedChat.current?._id);
                   }}
                   unreadCount={unreadCounts?.[chat._id] || 0}
+                  onlineUserIds={onlineUserIds}
                 />
               ))
             ) : (

@@ -8,9 +8,18 @@ export default function RecentUserChatCard({
   onClick,
   isActive,
   unreadCount = 0,
+  onlineUserIds,
 }) {
   const { user } = useAuth();
   const filteredChat = getChatObjectMetadata(chat, user);
+  const opponentParticipant = chat?.isGroupChat
+    ? null
+    : (chat.participants || []).find(
+        (participant) => participant?._id !== user?._id
+      );
+  const isOpponentOnline = opponentParticipant
+    ? onlineUserIds?.has?.(opponentParticipant?._id)
+    : false;
   const hasIncomingLastMessage =
     !!chat?.lastMessage?.sender?._id &&
     chat?.lastMessage?.sender?._id !== user?._id;
@@ -53,8 +62,9 @@ export default function RecentUserChatCard({
               alt={filteredChat.title}
               loading="lazy"
             />
-            {/* Online indicator */}
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+            {isOpponentOnline && (
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full" />
+            )}
           </div>
         )}
       </div>

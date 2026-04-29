@@ -57,11 +57,6 @@ const createOrGetExistingChat = asyncHandler(
       throw new BadRequestError("receiver does not exist");
     }
 
-    // check whether a user is requesting to chat with himself or not
-    if (receiver._id.toString() === currentUserId.toString()) {
-      throw new BadRequestError("you cannot chat with yourself");
-    }
-
     // search a chats with partipants including user and receiver id
     const chat = await chatRepo.getExistingOneToOneChat(
       currentUserId,

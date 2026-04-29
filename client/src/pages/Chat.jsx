@@ -34,7 +34,7 @@ export default function Chat() {
         )}
 
         <VideoChat show={showVideoComp} />
-        <div className="bg-background w-full h-screen flex relative animate-page-enter overflow-hidden pb-[84px] md:pb-0">
+        <div className="bg-background w-full h-[100dvh] flex relative animate-page-enter overflow-hidden pb-[84px] md:pb-0">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-primary/[0.04] via-transparent to-transparent z-0" />
 
           <div className="hidden md:block h-full panel-edge-right z-40 bg-card/60 backdrop-blur-xl border-r border-border/50">
@@ -46,15 +46,17 @@ export default function Chat() {
             />
           </div>
 
-          <div className="h-full panel-edge-right z-30 bg-card/60 backdrop-blur-xl border-r border-border/50">
+          <div
+            className={`h-full panel-edge-right z-30 bg-card/60 backdrop-blur-xl border-r border-border/50 md:w-[30%] md:max-w-sm md:flex-shrink-0 ${
+              isChatSelected ? "hidden md:block" : "block"
+            }`}
+          >
             <ChatLeftSidebar activeLeftSidebar={activeLeftSidebar} />
           </div>
 
           <div
-            className={`w-full h-full flex-col relative ${
-              isChatSelected && activeLeftSidebar === "recentChats"
-                ? "flex"
-                : "hidden md:flex"
+            className={`w-full h-full flex-col relative md:flex md:flex-1 ${
+              isChatSelected ? "flex" : "hidden"
             }`}
           >
             {currentSelectedChat.current?._id ? (

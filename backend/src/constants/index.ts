@@ -12,4 +12,7 @@ export enum ChatEventEnum {
   STOP_TYPING_EVENT = "stopTyping",
   MESSAGE_UPDATE_EVENT = "messageUpdated",
   MESSAGE_REACTION_EVENT = "messageReactionUpdated",
+  ACTIVE_USERS_EVENT = "activeUsers",
+  USER_ONLINE_EVENT = "userOnline",
+  USER_OFFLINE_EVENT = "userOffline",
 }

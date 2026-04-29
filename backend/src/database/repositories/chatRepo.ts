@@ -72,6 +72,21 @@ const getExistingOneToOneChat = async (
   userId: Types.ObjectId,
   receiverId: Types.ObjectId
 ): Promise<any> => {
+  if (userId.toString() === receiverId.toString()) {
+    return await ChatModel.aggregate([
+      {
+        $match: {
+          isGroupChat: false,
+          $and: [
+            { participants: { $size: 1 } },
+            { participants: { $elemMatch: { $eq: userId } } },
+          ],
+        },
+      },
+      ...commonChatAggregation(),
+    ]);
+  }
+
   return await ChatModel.aggregate([
     {
       $match: {
@@ -95,9 +110,12 @@ const createNewOneToOneChat = (
   userId: Types.ObjectId,
   receiverId: Types.ObjectId
 ): Promise<any> => {
+  const isSelfChat = userId.toString() === receiverId.toString();
+  const participants = isSelfChat ? [userId] : [userId, receiverId];
+
   return ChatModel.create({
     name: "One on one chat",
-    participants: [userId, receiverId], // add user and receiver id to the participants
+    participants,
     admin: userId,
   });
 };

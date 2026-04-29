@@ -90,6 +90,15 @@ export const getChatObjectMetadata = (chat, currentUser) => {
       (participant) => participant._id !== currentUser?._id
     );
 
+    if (!participant) {
+      return {
+        avatar: currentUser?.avatarUrl,
+        title: "Message yourself",
+        description: "Saved messages",
+        lastMessage,
+      };
+    }
+
     // return the filtered metadata
     return {
       avatar: participant?.avatarUrl,

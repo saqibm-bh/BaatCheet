@@ -176,7 +176,7 @@ export const sendMessage = asyncHandler(
     // updating the last message of the chat
     const updatedChat = await chatRepo.updateChatFields(
       new Types.ObjectId(chatId),
-      { lastMessage: message._id }
+      { lastMessage: message._id, updatedAt: new Date() }
     );
 
     // structure the message

@@ -35,7 +35,7 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full h-screen flex overflow-hidden bg-background animate-page-enter">
+    <div className="w-full h-[100dvh] flex overflow-hidden bg-background animate-page-enter">
 
       {/* ── LEFT: Form ────────────────────────────────────────────── */}
       <div className="w-full lg:w-[45%] xl:w-[42%] h-full flex flex-col justify-center px-8 md:px-14 lg:px-20 xl:px-28 relative z-10 bg-background">

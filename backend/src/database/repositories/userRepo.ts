@@ -135,9 +135,6 @@ const searchAvailableUsers = (
   return UserModel.aggregate([
     {
       $match: {
-        _id: {
-          $ne: currentUser._id, // skip the logged in user
-        },
         status: true,
         $or: [
           { username: { $regex: searchTermUsernameOrEmail, $options: "i" } },

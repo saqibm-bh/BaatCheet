@@ -41,6 +41,33 @@ interface ActiveCallOffer {
 }
 
 const activeCallOffers: ActiveCallOffer[] = [];
+const onlineUserCounts = new Map<string, number>();
+
+const emitActiveUsers = (io: any, socket: Socket): void => {
+  socket.emit(ChatEventEnum.ACTIVE_USERS_EVENT, Array.from(onlineUserCounts.keys()));
+};
+
+const markUserOnline = (io: any, userId: string): void => {
+  const currentCount = onlineUserCounts.get(userId) || 0;
+  onlineUserCounts.set(userId, currentCount + 1);
+
+  if (currentCount === 0) {
+    io.emit(ChatEventEnum.USER_ONLINE_EVENT, userId);
+  }
+};
+
+const markUserOffline = (io: any, userId: string): void => {
+  const currentCount = onlineUserCounts.get(userId) || 0;
+  const nextCount = Math.max(0, currentCount - 1);
+
+  if (nextCount === 0) {
+    onlineUserCounts.delete(userId);
+    io.emit(ChatEventEnum.USER_OFFLINE_EVENT, userId);
+    return;
+  }
+
+  onlineUserCounts.set(userId, nextCount);
+};
 
 const getMostRecentOffer = (
   predicate: (offer: ActiveCallOffer) => boolean
@@ -249,6 +276,8 @@ const initSocketIo = (io: any): void => {
       socket.user = user;
       socket.join(user._id.toString());
       socket.emit(ChatEventEnum.CONNECTED_EVENT);
+      markUserOnline(io, user._id.toString());
+      emitActiveUsers(io, socket);
       colorsUtils.log(
         "info",
         "🤝 User connected. userId: " + user._id.toString()
@@ -264,12 +293,14 @@ const initSocketIo = (io: any): void => {
         if (socket.user?._id) {
           socket.leave(socket.user._id.toString());
           removeOffersByUserId(socket.user._id.toString());
+          markUserOffline(io, socket.user._id.toString());
         }
       });
 
       socket.on("disconnect", () => {
         if (socket.user?._id) {
           removeOffersByUserId(socket.user._id.toString());
+          markUserOffline(io, socket.user._id.toString());
         }
       });
     } catch (error) {

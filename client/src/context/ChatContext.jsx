@@ -27,6 +27,7 @@ export const ChatProvider = ({ children }) => {
   const [attachments, setAttachments] = useState([]); // state to store files
   const [unreadCounts, setUnreadCounts] = useState({});
   const [typingByChat, setTypingByChat] = useState({});
+  const [onlineUserIds, setOnlineUserIds] = useState(() => new Set());
   // state to manage the left menu activeSidebar has three values: ["profile", "recentChats", "searchUser"]
   const [activeLeftSidebar, setActiveLeftSidebar] = useState("recentChats");
 
@@ -78,6 +79,7 @@ export const ChatProvider = ({ children }) => {
     setCurrentUserChats,
     setTypingByChat,
     updateLastMessageOfCurrentChat,
+    setOnlineUserIds,
   });
 
   const isChatTyping = (chatId) => {
@@ -207,6 +209,7 @@ export const ChatProvider = ({ children }) => {
         unreadCounts,
         resetUnreadCount,
         isChatTyping,
+        onlineUserIds,
       }}
     >
       {children}

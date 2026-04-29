@@ -368,6 +368,7 @@ export default function ChatsSection() {
     setMessageError,
     message,
     setMessage,
+    setMessages,
     sendChatMessage,
     attachments,
     setAttachments,
@@ -812,8 +813,12 @@ export default function ChatsSection() {
             aria-label="Back to chats"
             data-tooltip="Back"
             data-tooltip-pos="bottom"
-            className="hci-tooltip cursor-pointer p-2 -ml-2 rounded-full hover:bg-muted transition-colors block md:hidden"
-            onClick={() => setIsChatSelected(false)}
+            className="hci-tooltip cursor-pointer p-3 -ml-3 rounded-full hover:bg-muted transition-colors block md:hidden"
+            onClick={() => {
+              currentSelectedChat.current = null;
+              setMessages([]);
+              setIsChatSelected(false);
+            }}
           >
             <MdArrowBackIos className="text-foreground text-xl translate-x-1" />
           </button>
