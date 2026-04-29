@@ -28,13 +28,13 @@ Recommended local values:
 
 ```env
 PORT=5000
-SERVER_URL=http://localhost:5000
+SERVER_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
 
 # Vite dev server runs on 5173
-CORS_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 
-# Local MongoDB
-DB_URL=mongodb://localhost:27017
+# MongoDB
+MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
 DB_NAME=BaatCheet
 ```
 
@@ -44,7 +44,7 @@ Start the dev server:
 npm run dev
 ```
 
-API runs on `http://localhost:5000`.
+API runs on `https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net`.
 
 ## Run with Docker Compose
 
@@ -56,16 +56,16 @@ docker compose up --build
 
 In Docker, your backend `.env` typically uses:
 
-- `CORS_URL=http://localhost:3002` (the nginx-served frontend)
-- `DB_URL=mongodb://mongod:27017` (Mongo container name in `docker-compose.yml`)
+- `FRONTEND_URL=http://localhost:3002` (the nginx-served frontend)
+- `MONGO_URI=mongodb://mongod:27017` (Mongo container name in `docker-compose.yml`)
 
 ## Environment variables
 
 All variables are documented in `.env.sample`. A few notes:
 
-- `CORS_URL` supports multiple origins (comma-separated). Example:
+- `FRONTEND_URL` supports multiple origins (comma-separated). Example:
 	```env
-	CORS_URL=http://localhost:5173,http://localhost:3002
+	FRONTEND_URL=http://localhost:5173,http://localhost:3002
 	```
 - `SERVER_URL` is used to build public links for uploaded files. Set it to the URL users will actually hit.
 - Atlas URIs may need URL-encoding if your password has special characters.
@@ -103,6 +103,6 @@ src/
 
 ## Common issues
 
-- Browser shows CORS errors: check `CORS_URL` in `.env` matches your frontend origin.
-- Mongo connection fails in Docker: `DB_URL` should use `mongodb://mongod:27017` (not `localhost`).
+- Browser shows CORS errors: check `FRONTEND_URL` in `.env` matches your frontend origin.
+- Mongo connection fails in Docker: `MONGO_URI` should use `mongodb://mongod:27017` (not `localhost`).
 - Atlas password contains `@`, `#`, etc.: URL-encode it (for example `@` → `%40`).

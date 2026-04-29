@@ -22,17 +22,14 @@ const parseCommaSeparatedValues = (value: string | undefined): string[] => {
 export const environment = process.env.NODE_ENV;
 export const port = parsePositiveIntOrDefault(process.env.PORT, 5000);
 export const serverUrl = process.env.SERVER_URL?.trim();
-export const frontendUrl = process.env.FRONTEND_URL?.trim();
+const frontendUrls = parseCommaSeparatedValues(process.env.FRONTEND_URL);
 
 export const db = {
   name: process.env.DB_NAME || "",
-  url: process.env.DB_URL || "",
+  url: process.env.MONGO_URI || process.env.DB_URL || "",
   minPoolSize: parseInt(process.env.DB_MIN_POOL_SIZE || "5"),
   maxPoolSize: parseInt(process.env.DB_MAX_POOL_SIZE || "10"),
 };
-
-// spliting the corlUrl and return url string array
-export const corsUrl = parseCommaSeparatedValues(process.env.CORS_URL);
 
 const defaultDevOrigins = [
   "http://localhost:3000",
@@ -45,8 +42,7 @@ const defaultDevOrigins = [
 export const allowedOrigins = Array.from(
   new Set([
     ...(environment !== "production" ? defaultDevOrigins : []),
-    ...(frontendUrl ? [frontendUrl] : []),
-    ...corsUrl,
+    ...frontendUrls,
   ])
 );
 

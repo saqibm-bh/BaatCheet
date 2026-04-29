@@ -68,19 +68,16 @@ Create `backend/.env` from the sample:
 For local dev, make sure these values match your machine:
 
 ```env
-# backend/.env (local dev defaults)
+# backend/.env (production-ready defaults)
 PORT=5000
-SERVER_URL=http://localhost:5000
+SERVER_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
 
 # Vite dev server runs on 5173
-CORS_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:5173
 
-# Local Mongo
-DB_URL=mongodb://localhost:27017
+# MongoDB
+MONGO_URI=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
 DB_NAME=BaatCheet
-
-# Or MongoDB Atlas:
-# DB_URL=mongodb+srv://<user>:<pass>@<cluster>/<db>?retryWrites=true&w=majority
 ```
 
 Start the API:
@@ -89,7 +86,7 @@ Start the API:
 npm run dev
 ```
 
-API runs on `http://localhost:5000`.
+API runs on `https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net`.
 
 ### 2) Frontend
 
@@ -112,11 +109,11 @@ Create `client/.env` from the sample:
 For local dev, typical values are:
 
 ```env
-VITE_SERVER_URL=http://localhost:5000/
-VITE_SOCKET_URI=http://localhost:5000
+VITE_SERVER_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
+VITE_SOCKET_URI=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
 
 # For local testing you can point signaling to the same server
-VITE_SIGNALLING_SERVER_URL=http://localhost:5000/
+VITE_SIGNALLING_SERVER_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
 ```
 
 Run the app:
@@ -137,10 +134,10 @@ This repo includes `docker-compose.yml`.
 docker compose up --build
 ```
 
-- Backend: `http://localhost:5000`
+- Backend: `https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net`
 - Frontend (nginx): `http://localhost:3002`
 
-When running via Docker, use the provided `.env.sample` values (notably `CORS_URL=http://localhost:3002` and `DB_URL=mongodb://mongod:27017`).
+When running via Docker, use the provided `.env.sample` values (notably `FRONTEND_URL=http://localhost:3002` and `MONGO_URI=mongodb://mongod:27017`).
 
 ## Project layout (high level)
 
@@ -166,9 +163,9 @@ When running via Docker, use the provided `.env.sample` values (notably `CORS_UR
 
 ## Troubleshooting
 
-- CORS error in browser: make sure `backend/.env` has `CORS_URL` set to your frontend origin.
+- CORS error in browser: make sure `backend/.env` has `FRONTEND_URL` set to your frontend origin.
 - Atlas URI with special characters: URL-encode your password (`@` → `%40`, `#` → `%23`, etc.).
-- Socket connection issues: ensure `VITE_SOCKET_URI` points to the backend (default `http://localhost:5000`).
+- Socket connection issues: ensure `VITE_SOCKET_URI` points to the backend (default `https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net`).
 
 ## Contributing
 
