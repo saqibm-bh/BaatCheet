@@ -29,14 +29,14 @@ export default function RecentUserChatCard({
   return (
     <div
       onClick={() => onClick(chat)}
-      className={`flex gap-3 px-3 py-3 my-0.5 rounded-2xl cursor-pointer transition-all duration-200 group relative ${
+      className={`flex gap-3 px-3 py-3 my-0.5 rounded-2xl cursor-pointer transition-all duration-200 group relative w-full ${
         isActive
           ? "bg-primary/10 shadow-sm border border-primary/20"
           : "hover:bg-muted/60 border border-transparent hover:border-border/40"
       }`}
     >
       {/* Avatar */}
-      <div className="relative flex-shrink-0">
+      <div className="relative flex-shrink-0 w-12 h-12">
         {chat.isGroupChat ? (
           <div className="w-12 h-12 relative flex-shrink-0">
             {chat.participants.slice(0, 2).map((participant, i) => (

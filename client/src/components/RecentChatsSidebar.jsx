@@ -82,8 +82,8 @@ export default function RecentChatsSidebar() {
         isChatSelected ? "hidden md:flex" : "flex"
       }`}
     >
-      <div className="flex-shrink-0 sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-3">
-        <div className="flex items-start justify-between gap-3">
+      <div className="flex-shrink-0 sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-3 w-full">
+        <div className="flex items-start justify-between gap-3 w-full">
           <div>
             <h1 className="text-foreground font-semibold text-2xl tracking-tight">
               Recent chats
@@ -125,7 +125,7 @@ export default function RecentChatsSidebar() {
           </p>
         )}
 
-        <div className="flex items-center gap-2 bg-muted/40 border border-border/50 text-foreground p-2.5 rounded-xl my-4 transition-all focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-sm">
+        <div className="flex items-center gap-2 bg-muted/40 border border-border/50 text-foreground p-2.5 rounded-xl my-4 transition-all focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary/50 shadow-sm w-full">
           <BiSearch className="text-muted-foreground text-xl" />
           <input
             type="text"
@@ -136,7 +136,7 @@ export default function RecentChatsSidebar() {
           />
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 w-full">
           {[
             { key: "all", label: "All" },
             { key: "direct", label: "Direct" },
@@ -161,9 +161,9 @@ export default function RecentChatsSidebar() {
         
         {/* Active Now Story Bar (Instagram Style) */}
         {!loadingChats && currentUserChats?.length > 0 && (
-          <div className="mb-4">
+          <div className="mb-4 w-full">
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">Active Now</h4>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1">
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 px-1 w-full min-w-0">
               {/* Derive unique friends from recent chats to populate stories */}
               {Array.from(new Set(
                 currentUserChats
@@ -194,7 +194,7 @@ export default function RecentChatsSidebar() {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 -mx-2 px-2">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-4 -mx-2 px-2 w-full">
         {loadingChats ? (
           <div className="space-y-3 pt-2">
             {[1, 2, 3, 4, 5].map((row) => (
@@ -217,7 +217,7 @@ export default function RecentChatsSidebar() {
             </h1>
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 w-full">
             {(filteredRecentUserChats || []).length ? (
               (filteredRecentUserChats || []).map((chat) => (
                 <RecentUserChatCard
