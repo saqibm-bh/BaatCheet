@@ -184,7 +184,7 @@ export default function RecentChatsSidebar() {
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
                     )}
                   </div>
-                  <span className="text-[10px] font-medium text-foreground max-w-[50px] truncate">
+                  <span className="text-[10px] font-medium text-foreground max-w-14 truncate">
                     {(friend?.username || "User").split(" ")[0]}
                   </span>
                 </div>

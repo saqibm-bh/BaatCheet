@@ -93,6 +93,12 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
+  html,
+  body,
+  #root {
+    @apply w-full min-h-[100dvh] overflow-x-hidden;
+  }
+
   :where(button, a, input, textarea, [role="button"], [tabindex]):focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;

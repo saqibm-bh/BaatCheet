@@ -47,7 +47,7 @@ export default function Chat() {
           </div>
 
           <div
-            className={`h-full panel-edge-right z-30 bg-card/60 backdrop-blur-xl border-r border-border/50 md:w-[350px] md:max-w-[350px] md:flex-shrink-0 ${
+            className={`h-full panel-edge-right z-30 bg-card/60 backdrop-blur-xl border-r border-border/50 md:w-80 md:max-w-sm md:flex-shrink-0 ${
               isChatSelected ? "hidden md:block" : "block"
             }`}
           >

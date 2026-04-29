@@ -103,7 +103,7 @@ const MessageCont = ({
         }`}
       >
         <div
-          className={`flex flex-col relative min-w-[80px] max-w-full px-3.5 py-2 hover:shadow-md transition-shadow duration-200 ${
+          className={`flex flex-col relative min-w-20 max-w-full px-3.5 py-2 hover:shadow-md transition-shadow duration-200 ${
             isOwnMessage 
               ? "bg-primary text-primary-foreground shadow-sm order-2 rounded-[20px] rounded-tr-[4px]" 
               : "text-foreground bg-card border border-border/40 shadow-sm order-1 rounded-[20px] rounded-tl-[4px]"
@@ -949,7 +949,7 @@ export default function ChatsSection() {
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-2">
-            <span className="text-xs text-muted-foreground min-w-[90px] text-right">
+            <span className="text-xs text-muted-foreground min-w-24 text-right">
               {isServerSearching
                 ? "Searching..."
                 : matchedMessageIds.length
@@ -960,14 +960,14 @@ export default function ChatsSection() {
             </span>
 
             {searchQuery.trim().length >= 2 && !serverSearchError && (
-              <span className="text-xs text-muted-foreground min-w-[64px] text-right">
+              <span className="text-xs text-muted-foreground min-w-16 text-right">
                 Page {serverSearchTotalPages ? serverSearchPage : 0}/
                 {serverSearchTotalPages}
               </span>
             )}
 
             {searchQuery.trim().length >= 2 && !serverSearchError && (
-              <span className="text-xs text-muted-foreground min-w-[84px] text-right">
+              <span className="text-xs text-muted-foreground min-w-20 text-right">
                 Total {serverSearchTotalMatches}
               </span>
             )}
@@ -1193,7 +1193,7 @@ export default function ChatsSection() {
               <IoMdSend className="text-3xl text-muted-foreground/50 ml-1" />
             </div>
             <h1 className="text-xl font-semibold text-foreground tracking-tight">Say Hello!</h1>
-            <p className="text-sm text-muted-foreground text-center max-w-[250px]">
+            <p className="text-sm text-muted-foreground text-center max-w-xs">
               This is the beginning of your conversation with {opponentUsername || "this group"}.
             </p>
           </div>

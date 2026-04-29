@@ -286,7 +286,7 @@ export default function ProfileSidebar() {
   };
 
   return (
-    <div className="w-[390px] max-w-[390px] md:max-w-full md:w-full h-full px-5 py-6 bg-background/50 glass-panel overflow-y-auto no-scrollbar relative animate-fade-in">
+    <div className="w-full h-full px-5 py-6 bg-background/50 glass-panel overflow-y-auto no-scrollbar relative animate-fade-in">
       
       {/* Header */}
       <div className="sticky top-0 z-20 flex justify-between items-center mb-5 py-2 bg-background/75 backdrop-blur-md border-b border-border/40">
@@ -395,7 +395,7 @@ export default function ProfileSidebar() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               maxLength={40}
-              className="mb-2 w-full max-w-[250px] bg-background/80 border border-border rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+              className="mb-2 w-full max-w-xs bg-background/80 border border-border rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
               placeholder="Username"
             />
            ) : (
@@ -410,7 +410,7 @@ export default function ProfileSidebar() {
               onChange={(e) => setBio(e.target.value)}
               maxLength={200}
               rows={3}
-              className="w-full max-w-[280px] bg-background/80 border border-border rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              className="w-full max-w-sm bg-background/80 border border-border rounded-xl px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 resize-none"
               placeholder="Write your bio"
             />
            ) : (

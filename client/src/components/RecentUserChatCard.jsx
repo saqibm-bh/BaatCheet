@@ -101,7 +101,7 @@ export default function RecentUserChatCard({
           </p>
 
           {unreadCount > 0 && !isActive && (
-            <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold leading-5 text-center shrink-0">
+            <span className="min-w-5 h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold leading-5 text-center shrink-0">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -110,7 +110,7 @@ export default function RecentUserChatCard({
 
       {/* Active left indicator bar */}
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-primary rounded-r-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
       )}
     </div>
   );
