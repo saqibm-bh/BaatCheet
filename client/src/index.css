@@ -1,0 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+    --font-poppins: "Poppins", sans-serif;
+
+    /* Shadcn/Linear UI Variables - Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    /* Primary brand color - Premium Deep Blurple */
+    --primary: 255 85% 58%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 255 85% 58%;
+    
+    --radius: 0.75rem;
+
+    /* Legacy vars so old components don't instantly break */
+    --premium-surface: rgba(255, 255, 255, 0.75);
+    --premium-surface-dark: rgba(48, 56, 65, 0.7);
+    --premium-border: rgba(148, 163, 184, 0.3);
+    --premium-border-dark: rgba(148, 163, 184, 0.2);
+  }
+
+  .dark {
+    /* Shadcn/Linear UI Variables - Dark Mode (Deep OLED-friendly greys) */
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222 47% 6.5%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 255 85% 65%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 255 85% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  :where(button, a, input, textarea, [role="button"], [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.18);
+  }
+}
+
+/* Modern Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer utilities {
+  /* New Linear/Discord Style Premium Glass */
+  .glass-panel {
+    @apply bg-background/80 backdrop-blur-md border border-border/50 shadow-sm;
+  }
+  .glass-panel-dark {
+    @apply bg-background/60 backdrop-blur-xl border border-white/10 shadow-xl;
+  }
+
+  /* Legacy Utilities (Kept so existing UI survives the transition) */
+  .container-shadow {
+    @apply shadow-[rgba(13,_38,_76,_0.19)_0px_9px_20px];
+  }
+  .dark-upper-cont-shadow {
+    box-shadow: 0px -14px 35px -18px rgba(0, 0, 0, 0.75);
+  }
+  .light-upper-cont-shadow {
+    box-shadow: 0px -14px 35px -18px rgba(0, 0, 0, 0.38);
+  }
+  .premium-bg {
+    @apply bg-gradient-to-br from-slate-50 via-slate-100 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950;
+  }
+  .premium-surface {
+    background: var(--premium-surface);
+    border: 1px solid var(--premium-border);
+    backdrop-filter: blur(10px);
+    @apply dark:bg-opacity-100 dark:shadow-black/25 dark:shadow-lg;
+  }
+  .dark .premium-surface {
+    background: var(--premium-surface-dark);
+    border: 1px solid var(--premium-border-dark);
+  }
+  .premium-ring-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50;
+  }
+
+  /* Page-level enter transition - apply to route root divs */
+  .page-transition {
+    animation: pageEnter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Aesthetic divider - use instead of raw `border` between panels */
+  .panel-divider-x {
+    @apply border-r border-border/40;
+  }
+  .panel-divider-y {
+    @apply border-b border-border/40;
+  }
+
+  /* Sidebar / panel edge glow - gives a subtle "lit" separation */
+  .panel-edge-right {
+    box-shadow: 1px 0 0 0 hsl(var(--border) / 0.5), 4px 0 16px -4px hsl(var(--primary) / 0.04);
+  }
+  .panel-edge-left {
+    box-shadow: -1px 0 0 0 hsl(var(--border) / 0.5), -4px 0 16px -4px hsl(var(--primary) / 0.04);
+  }
+
+  /* Subtle chat wallpaper pattern (transparent overlaid dots) */
+  .chat-wallpaper {
+    background-image: 
+      radial-gradient(hsl(var(--foreground)/0.1) 1px, transparent 0);
+    background-size: 24px 24px;
+    background-position: -12px -12px;
+    @apply bg-slate-50 dark:bg-[#0B141A];
+  }
+
+  /* Accessible hover/focus tooltip for icon-first controls */
+  .hci-tooltip:not(.absolute):not(.fixed):not(.sticky) {
+    position: relative;
+  }
+
+  .hci-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    top: -8px;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: hsl(var(--popover-foreground));
+    background: hsl(var(--popover));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 6px 20px -8px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s ease,
+      visibility 0.16s ease;
+    transition-delay: 120ms;
+    z-index: 70;
+    visibility: hidden;
+  }
+
+  .hci-tooltip:hover::after,
+  .hci-tooltip:focus-visible::after {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 2px));
+    visibility: visible;
+  }
+
+  .hci-tooltip[data-tooltip-pos="bottom"]::after {
+    top: auto;
+    bottom: -8px;
+    transform: translate(-50%, 100%);
+  }
+
+  .hci-tooltip[data-tooltip-pos="bottom"]:hover::after,
+  .hci-tooltip[data-tooltip-pos="bottom"]:focus-visible::after {
+    transform: translate(-50%, calc(100% + 2px));
+  }
+
+  .hci-tooltip[data-tooltip-pos="right"]::after {
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translate(0, -50%);
+  }
+
+  .hci-tooltip[data-tooltip-pos="right"]:hover::after,
+  .hci-tooltip[data-tooltip-pos="right"]:focus-visible::after {
+    transform: translate(2px, -50%);
+  }
+
+  .hci-tooltip[data-tooltip-pos="left"]::after {
+    left: auto;
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translate(0, -50%);
+  }
+
+  .hci-tooltip[data-tooltip-pos="left"]:hover::after,
+  .hci-tooltip[data-tooltip-pos="left"]:focus-visible::after {
+    transform: translate(-2px, -50%);
+  }
+
+  @media (hover: none) {
+    .hci-tooltip::after {
+      display: none;
+    }
+  }
+}
