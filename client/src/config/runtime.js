@@ -11,7 +11,7 @@ const getEnvUrl = (...keys) => {
   return "";
 };
 
-export const apiBaseUrl = getEnvUrl("VITE_API_URL", "VITE_SERVER_URL");
+export const apiBaseUrl = getEnvUrl("VITE_SERVER_URL", "VITE_API_URL");
 
 export const socketBaseUrl =
   getEnvUrl("VITE_SOCKET_URL", "VITE_SOCKET_URI") || apiBaseUrl;

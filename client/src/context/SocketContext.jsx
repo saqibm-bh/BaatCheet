@@ -9,7 +9,7 @@ const getSocket = () => {
 
   if (!socketBaseUrl) {
     throw new Error(
-      "Missing socket URL. Set VITE_SOCKET_URL or VITE_API_URL in client environment."
+      "Missing socket URL. Set VITE_SOCKET_URL or VITE_SERVER_URL in client environment."
     );
   }
 

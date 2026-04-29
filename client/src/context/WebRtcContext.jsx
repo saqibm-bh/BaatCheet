@@ -7,12 +7,18 @@ import { LocalStorage } from "../utils";
 import { signalingBaseUrl } from "../config/runtime";
 
 const webRtcContext = createContext(null);
+const isDev = import.meta.env?.DEV;
+const debugLog = (...args) => {
+  if (isDev) {
+    console.log(...args);
+  }
+};
 
 // connect to the signalling socket server
 const connectToSigServer = (userId) => {
   if (!signalingBaseUrl) {
     throw new Error(
-      "Missing signaling URL. Set VITE_SIGNALING_URL, VITE_SOCKET_URL, or VITE_API_URL in client environment."
+      "Missing signaling URL. Set VITE_SIGNALING_URL, VITE_SOCKET_URL, or VITE_SERVER_URL in client environment."
     );
   }
 
@@ -89,7 +95,7 @@ export default function WebRtcContextProvider({ children }) {
 
       // get the video input devices id
       if (!navigator.mediaDevices?.enumerateDevices) {
-        console.log("enumerate devices not supported");
+        debugLog("enumerate devices not supported");
       } else {
         // list all the camera devices of user
         navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -103,7 +109,7 @@ export default function WebRtcContextProvider({ children }) {
 
           setInputVideoDevices(videoDevices);
           setInputAudioDevices(audioDevices);
-          console.log(audioDevices);
+          debugLog(audioDevices);
         });
       }
 
@@ -129,7 +135,7 @@ export default function WebRtcContextProvider({ children }) {
           setSelectedInputAudioDevice(currentAudioDeviceId);
       }
     } catch (error) {
-      console.log("Error while fetching userMedia..." + error);
+      debugLog("Error while fetching userMedia..." + error);
     }
   };
 
@@ -171,7 +177,8 @@ export default function WebRtcContextProvider({ children }) {
 
   const changeVideoInputDevice = async (videoDeviceId) => {
     if (!videoDeviceId) {
-      return console.log("video input device id not provided");
+      debugLog("video input device id not provided");
+      return;
     }
 
     // stop all local media tracks
@@ -186,7 +193,8 @@ export default function WebRtcContextProvider({ children }) {
 
   const changeAudioInputDevice = async (audioDeviceId) => {
     if (!audioDeviceId) {
-      return console.log("audio input device id not provided");
+      debugLog("audio input device id not provided");
+      return;
     }
 
     // stop all local media tracks
@@ -232,7 +240,7 @@ export default function WebRtcContextProvider({ children }) {
 
       // listen for sigalling state change
       peerConnectionRef.current.addEventListener("signalingstatechange", () => {
-        console.log(
+        debugLog(
           "Signaling state change:",
           peerConnectionRef.current.signalingState
         );
@@ -242,7 +250,7 @@ export default function WebRtcContextProvider({ children }) {
       peerConnectionRef.current.addEventListener(
         "connectionstatechange",
         () => {
-          console.log(
+          debugLog(
             "Connection state change:",
             peerConnectionRef.current.connectionState
           );
@@ -252,8 +260,8 @@ export default function WebRtcContextProvider({ children }) {
 
       // add event listener for the track coming from other peer
       peerConnectionRef.current.addEventListener("track", (event) => {
-        console.log("got track from other peer !!!");
-        console.log(event);
+        debugLog("got track from other peer !!!");
+        debugLog(event);
         event.streams[0].getTracks().forEach((track) => {
           remoteStreamRef.current.addTrack(track, remoteStreamRef.current);
         });
@@ -275,9 +283,10 @@ export default function WebRtcContextProvider({ children }) {
 
   // handle call
   const handleCall = async () => {
-    console.log("handling Call called with targetUserId:", targetUserId);
+    debugLog("handling Call called with targetUserId:", targetUserId);
     if (!targetUserId) {
-      return console.log("other peer id not provided");
+      debugLog("other peer id not provided");
+      return;
     }
     setCallConnectionState("initiated waiting to accept...");
     setShowVideoComp(true);
@@ -291,7 +300,7 @@ export default function WebRtcContextProvider({ children }) {
       // emit the new offer to signalling server to pass it to the other peer
       socket.emit("newOffer", { newOffer, sendToUserId: targetUserId.trim() });
     } catch (error) {
-      console.log("error while calling " + error);
+      debugLog("error while calling " + error);
     }
   };
 
@@ -348,24 +357,24 @@ export default function WebRtcContextProvider({ children }) {
 
     const answerOffer = await peerConnectionRef.current.createAnswer({}); // create answer offer
     await peerConnectionRef.current.setLocalDescription(answerOffer); // set local description
-    console.log("created an answer offer");
+    debugLog("created an answer offer");
     offerObj.answer = answerOffer; // set answer offer to offerObj
 
     const offerIceCandidates = await socket.emitWithAck("newAnswer", offerObj);
     offerIceCandidates.forEach((c) => {
       peerConnectionRef.current.addIceCandidate(c);
-      console.log("addedIceCandidate");
+      debugLog("addedIceCandidate");
     });
   };
 
   const handleAddAnswer = async (offerObj) => {
     await peerConnectionRef.current.setRemoteDescription(offerObj.answer);
-    console.log("client 1 set his remote description");
+    debugLog("client 1 set his remote description");
   };
 
   const handleAddIceCandidate = (iceCandidate) => {
     if (peerConnectionRef.current) {
-      console.log("addedIceCandidate");
+      debugLog("addedIceCandidate");
       peerConnectionRef.current.addIceCandidate(iceCandidate);
     }
   };
