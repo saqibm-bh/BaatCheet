@@ -1,4 +1,4 @@
-import app from "./app";
+import httpServer from "./app";
 import {
   cloudinary as cloudinaryConfig,
   environment,
@@ -13,7 +13,7 @@ const startServer = async () => {
       console.log("☁️  Cloudinary startup validation passed");
     }
 
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
       console.log("⚙️  server running on port " + port);
     });
   } catch (error: any) {
@@ -29,7 +29,7 @@ const startServer = async () => {
     console.warn(
       "Continuing startup in non-production mode without validated Cloudinary."
     );
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
       console.log("⚙️  server running on port " + port);
     });
   }
