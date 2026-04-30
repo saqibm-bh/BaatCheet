@@ -443,11 +443,26 @@ const summarizeChat = asyncHandler(
         .join("\n")
         .trim();
     } catch (error) {
+      console.log(error);
+
       if (axios.isAxiosError(error)) {
-        throw new InternalError("AI summary service request failed");
+        const responseData = error.response?.data;
+        const responseDetails =
+          responseData
+            ? typeof responseData === "string"
+              ? responseData
+              : JSON.stringify(responseData)
+            : "unknown error";
+        const errorMessage = error.message || responseDetails;
+
+        throw new InternalError(
+          `AI summary service request failed: ${errorMessage}`
+        );
       }
 
-      throw new InternalError("unable to generate chat summary");
+      const fallbackMessage =
+        error instanceof Error ? error.message : "unable to generate chat summary";
+      throw new InternalError(fallbackMessage);
     }
 
     if (!summary) {

@@ -4,7 +4,6 @@ import socketio from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import { ringtone } from "../assets";
 import { LocalStorage } from "../utils";
-import { signalingBaseUrl } from "../config/runtime";
 
 const webRtcContext = createContext(null);
 const isDev = import.meta.env?.DEV;
@@ -16,16 +15,18 @@ const debugLog = (...args) => {
 
 // connect to the signalling socket server
 const connectToSigServer = (userId) => {
-  if (!signalingBaseUrl) {
+  const signalingUrl = (import.meta.env?.VITE_SERVER_URL || "").trim().replace(/\/+$/, "");
+
+  if (!signalingUrl) {
     throw new Error(
-      "Missing signaling URL. Set VITE_SIGNALING_URL, VITE_SOCKET_URL, or VITE_SERVER_URL in client environment."
+      "Missing signaling URL. Set VITE_SERVER_URL in client environment."
     );
   }
 
   const token = LocalStorage.get("token");
 
-  return socketio(signalingBaseUrl, {
-    secure: signalingBaseUrl?.startsWith("https"),
+  return socketio(signalingUrl, {
+    secure: signalingUrl?.startsWith("https"),
     withCredentials: true,
     auth: { token, userId },
     transports: ["websocket", "polling"],

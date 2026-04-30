@@ -12,11 +12,3 @@ const getEnvUrl = (...keys) => {
 };
 
 export const apiBaseUrl = getEnvUrl("VITE_SERVER_URL", "VITE_API_URL");
-
-export const socketBaseUrl =
-  getEnvUrl("VITE_SOCKET_URL", "VITE_SOCKET_URI") || apiBaseUrl;
-
-export const signalingBaseUrl =
-  getEnvUrl("VITE_SIGNALING_URL", "VITE_SIGNALLING_SERVER_URL") ||
-  socketBaseUrl ||
-  apiBaseUrl;

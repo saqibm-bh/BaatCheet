@@ -1,20 +1,20 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { LocalStorage } from "../utils";
 import socketio from "socket.io-client";
-import { socketBaseUrl } from "../config/runtime";
 
 // method to establish a socket connection
 const getSocket = () => {
   const token = LocalStorage.get("token"); // get token from local storage
+  const socketUrl = (import.meta.env?.VITE_SERVER_URL || "").trim().replace(/\/+$/, "");
 
-  if (!socketBaseUrl) {
+  if (!socketUrl) {
     throw new Error(
-      "Missing socket URL. Set VITE_SOCKET_URL or VITE_SERVER_URL in client environment."
+      "Missing socket URL. Set VITE_SERVER_URL in client environment."
     );
   }
 
   // create a socket connection with the provided URI and authentication
-  return socketio(socketBaseUrl, {
+  return socketio(socketUrl, {
     withCredentials: true,
     auth: { token },
     transports: ["websocket", "polling"],
