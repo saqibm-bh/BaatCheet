@@ -2,7 +2,7 @@
 
 # BaatCheet
 
-### Real-time chat with an AI sidekick built directly into the conversation
+### Real-time chat webapp with an AI chatbot built directly into the conversation
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
