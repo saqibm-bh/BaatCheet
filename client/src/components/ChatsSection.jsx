@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { saveAs } from "file-saver";
 import {
   BiSearch,
@@ -27,6 +27,8 @@ import { BsStars, BsLightningChargeFill } from "react-icons/bs";
 import UserAvatar from "./UserAvatar";
 import { useSocket } from "../context/SocketContext";
 import { searchChatMessages } from "../api";
+import ReactMarkdown from "react-markdown";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 const MessageCont = ({
   isOwnMessage,
@@ -43,6 +45,11 @@ const MessageCont = ({
   const [currentImageUrl, setCurrentImageUrl] = useState("");
   const messageMenuRef = useRef(null);
   const { user } = useAuth();
+  const shouldRenderMarkdown = message?.contentFormat === "markdown" || message?.sender?.isAI;
+  const isPrivateMessage =
+    message?.visibleOnlyTo &&
+    user?._id &&
+    message.visibleOnlyTo.toString() === user._id.toString();
 
   const reactionSummary = useMemo(() => {
     const groupedReactions = {};
@@ -113,8 +120,17 @@ const MessageCont = ({
                 ? "ring-2 ring-amber-400"
                 : "ring-1 ring-amber-300/70"
               : ""
+          } ${
+            isPrivateMessage ? "border border-dashed border-amber-400/60" : ""
           }`}
         >
+          {isPrivateMessage && (
+            <span className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${
+              isOwnMessage ? "text-primary-foreground/80" : "text-amber-500"
+            }`}>
+              Only visible to you
+            </span>
+          )}
           {!isOwnMessage && isGroupChat && message?.sender?.username ? (
             <p className="text-[11px] font-semibold text-primary mb-1">
               {message.sender.username}
@@ -202,7 +218,7 @@ const MessageCont = ({
             </div>
           ) : null}
           
-          <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+          <div className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
             {isEditingMessage ? (
               <textarea
                 value={editedContent}
@@ -214,10 +230,27 @@ const MessageCont = ({
                     : "bg-muted/40 border-border text-foreground"
                 }`}
               />
+            ) : shouldRenderMarkdown ? (
+              <ReactMarkdown
+                className="prose prose-sm max-w-none text-inherit whitespace-pre-wrap"
+                components={{
+                  p: ({ node, ...props }) => <p className="m-0" {...props} />,
+                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 m-0" {...props} />,
+                  ol: ({ node, ...props }) => <ol className="list-decimal pl-5 m-0" {...props} />,
+                  code: ({ node, inline, ...props }) =>
+                    inline ? (
+                      <code className="rounded bg-muted/60 px-1 py-0.5" {...props} />
+                    ) : (
+                      <code className="block rounded-lg bg-muted/60 p-2 whitespace-pre-wrap" {...props} />
+                    ),
+                }}
+              >
+                {message.content || ""}
+              </ReactMarkdown>
             ) : (
               message.content
             )}
-          </p>
+          </div>
 
           {isEditingMessage && (
             <div className="flex items-center justify-end gap-2 mt-2">
@@ -384,20 +417,26 @@ export default function ChatsSection() {
     setIsChatSelected,
     resetUnreadCount,
     isChatTyping,
+    aiStreamByChat,
   } = useChat();
   const { user } = useAuth();
   const { socket, socketEvents } = useSocket();
 
   const safeMessages = useMemo(() => {
-    return Array.isArray(messages)
-      ? messages.filter((msg) => msg && msg._id)
-      : [];
-  }, [messages]);
+    if (!Array.isArray(messages)) return [];
+
+    return messages.filter((msg) => {
+      if (!msg || !msg._id) return false;
+      if (!msg.visibleOnlyTo) return true;
+      return msg.visibleOnlyTo?.toString?.() === user?._id?.toString?.();
+    });
+  }, [messages, user?._id]);
 
   const { suggestions, isGenerating, clearSuggestions } = useSmartReplies(
     safeMessages,
     user?._id
   );
+  const [isPrivateQuery, setIsPrivateQuery] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isSummaryCopied, setIsSummaryCopied] = useState(false);
@@ -422,6 +461,13 @@ export default function ChatsSection() {
   const isGroupChat = !!currentSelectedChat.current?.isGroupChat;
   const selectedChatId = currentSelectedChat.current?._id;
   const isTypingInSelectedChat = isChatTyping(selectedChatId);
+  const streamingEntry = selectedChatId ? aiStreamByChat?.[selectedChatId] : null;
+  const isStreaming = Boolean(streamingEntry?.text);
+  const normalizedInput = message.trim().toLowerCase();
+  const hasAiTrigger =
+    normalizedInput.startsWith("/ai") ||
+    normalizedInput.includes("@ai") ||
+    normalizedInput.includes("@ai assistant");
 
   const scrollToBottomRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -435,6 +481,14 @@ export default function ChatsSection() {
   };
 
   const { handleCall, setTargetUserId, targetUserId } = useConnectWebRtc();
+
+  const handlePrivateSend = useCallback(() => {
+    sendChatMessage({ isPrivateQuery });
+
+    if (isPrivateQuery) {
+      setIsPrivateQuery(false);
+    }
+  }, [sendChatMessage, isPrivateQuery]);
 
   const {
     canSend,
@@ -450,7 +504,7 @@ export default function ChatsSection() {
     sendingMessage,
     messageError,
     setMessageError,
-    sendChatMessage,
+    sendChatMessage: handlePrivateSend,
   });
 
   const matchedMessageIds = useMemo(() => {
@@ -698,6 +752,12 @@ export default function ChatsSection() {
 
     messageNode.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [activeMatchMessageId]);
+
+  useEffect(() => {
+    if (!hasAiTrigger && isPrivateQuery) {
+      setIsPrivateQuery(false);
+    }
+  }, [hasAiTrigger, isPrivateQuery]);
 
   useEffect(() => {
     scrollToBottom();
@@ -1228,6 +1288,25 @@ export default function ChatsSection() {
                 </div>
               )
             )}
+            {isStreaming && (
+              <MessageCont
+                isOwnMessage={streamingEntry?.senderId === user?._id}
+                isGroupChat={currentSelectedChat.current?.isGroupChat}
+                message={{
+                  _id: "ai-stream",
+                  content: streamingEntry?.text || "",
+                  contentFormat: "markdown",
+                  visibleOnlyTo: streamingEntry?.isPrivateQuery
+                    ? user?._id
+                    : null,
+                  createdAt: new Date(),
+                  sender: {
+                    _id: streamingEntry?.senderId,
+                    isAI: true,
+                  },
+                }}
+              />
+            )}
             <div ref={scrollToBottomRef} className="h-2" />
           </div>
         )}
@@ -1399,6 +1478,22 @@ export default function ChatsSection() {
               autoComplete="off"
             />
           </div>
+
+          {hasAiTrigger && (
+            <button
+              type="button"
+              onClick={() => setIsPrivateQuery((prev) => !prev)}
+              aria-label={isPrivateQuery ? "Disable private AI" : "Enable private AI"}
+              data-tooltip={isPrivateQuery ? "Private view on" : "Private view off"}
+              className={`hci-tooltip h-12 w-12 flex items-center justify-center rounded-full border transition-all duration-300 shrink-0 ${
+                isPrivateQuery
+                  ? "border-amber-400 bg-amber-500/10 text-amber-500"
+                  : "border-border bg-muted text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {isPrivateQuery ? <FiEyeOff className="text-xl" /> : <FiEye className="text-xl" />}
+            </button>
+          )}
 
           {/* Send Button */}
           <button

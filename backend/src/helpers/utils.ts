@@ -12,6 +12,7 @@ export async function filterUserData(user: User) {
     "bio",
     "roles",
     "avatarUrl",
+    "isAI",
   ]);
   return data;
 }

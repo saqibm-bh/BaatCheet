@@ -11,6 +11,7 @@ export const useChatSocketListeners = ({
   setTypingByChat,
   updateLastMessageOfCurrentChat,
   setOnlineUserIds,
+  setAiStreamByChat,
 }) => {
   // handle on message received event from server
   // ie when a new message is sent to the server and the server sends a event to participants of chat with current message
@@ -171,6 +172,46 @@ export const useChatSocketListeners = ({
     [setOnlineUserIds]
   );
 
+  const onMessageChunk = useCallback(
+    (payload) => {
+      if (!payload?.chatId || !payload?.chunk) return;
+
+      setAiStreamByChat((prev) => {
+        const previousEntry = prev[payload.chatId] || {
+          text: "",
+          senderId: payload.senderId,
+        };
+
+        return {
+          ...prev,
+          [payload.chatId]: {
+            text: `${previousEntry.text || ""}${payload.chunk}`,
+            senderId: payload.senderId || previousEntry.senderId,
+            isPrivateQuery:
+              typeof payload.isPrivateQuery === "boolean"
+                ? payload.isPrivateQuery
+                : previousEntry.isPrivateQuery,
+          },
+        };
+      });
+    },
+    [setAiStreamByChat]
+  );
+
+  const onMessageComplete = useCallback(
+    (payload) => {
+      if (!payload?.chatId) return;
+
+      setAiStreamByChat((prev) => {
+        if (!prev[payload.chatId]) return prev;
+        const next = { ...prev };
+        delete next[payload.chatId];
+        return next;
+      });
+    },
+    [setAiStreamByChat]
+  );
+
   useEffect(() => {
     if (!socket) return;
 
@@ -184,6 +225,8 @@ export const useChatSocketListeners = ({
     socket.on(socketEvents.MESSAGE_DELETE_EVENT, onMessageDeleted);
     socket.on(socketEvents.MESSAGE_UPDATE_EVENT, onMessageUpdated);
     socket.on(socketEvents.MESSAGE_REACTION_EVENT, onMessageReactionUpdated);
+    socket.on(socketEvents.MESSAGE_CHUNK_EVENT, onMessageChunk);
+    socket.on(socketEvents.MESSAGE_COMPLETE_EVENT, onMessageComplete);
     socket.on(socketEvents.ACTIVE_USERS_EVENT, onActiveUsers);
     socket.on(socketEvents.USER_ONLINE_EVENT, onUserOnline);
     socket.on(socketEvents.USER_OFFLINE_EVENT, onUserOffline);
@@ -199,6 +242,8 @@ export const useChatSocketListeners = ({
       socket.off(socketEvents.MESSAGE_DELETE_EVENT, onMessageDeleted);
       socket.off(socketEvents.MESSAGE_UPDATE_EVENT, onMessageUpdated);
       socket.off(socketEvents.MESSAGE_REACTION_EVENT, onMessageReactionUpdated);
+      socket.off(socketEvents.MESSAGE_CHUNK_EVENT, onMessageChunk);
+      socket.off(socketEvents.MESSAGE_COMPLETE_EVENT, onMessageComplete);
       socket.off(socketEvents.ACTIVE_USERS_EVENT, onActiveUsers);
       socket.off(socketEvents.USER_ONLINE_EVENT, onUserOnline);
       socket.off(socketEvents.USER_OFFLINE_EVENT, onUserOffline);
@@ -215,6 +260,8 @@ export const useChatSocketListeners = ({
     onMessageDeleted,
     onMessageUpdated,
     onMessageReactionUpdated,
+    onMessageChunk,
+    onMessageComplete,
     onActiveUsers,
     onUserOnline,
     onUserOffline,

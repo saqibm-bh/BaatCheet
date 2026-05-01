@@ -25,6 +25,7 @@ import {
   uploadBufferToCloudinary,
   validateUploadFileForCloudinary,
 } from "../helpers/cloudinary";
+import { ensureAiChatForUser } from "../helpers/aiAssistant";
 
 const signUp = asyncHandler(async (req: Request, res: Response) => {
   const { email, username, password } = req.body;
@@ -53,6 +54,8 @@ const signUp = asyncHandler(async (req: Request, res: Response) => {
 
   const tokens = await createTokens(user);
   const userData = await filterUserData(user);
+
+  await ensureAiChatForUser(user._id as Types.ObjectId);
 
   new SuccessResponse("signup successful", {
     user: userData,

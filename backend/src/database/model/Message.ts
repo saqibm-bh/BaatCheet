@@ -6,6 +6,8 @@ export default interface Message {
   _id: Types.ObjectId;
   sender: Types.ObjectId;
   content?: string;
+  contentFormat?: "text" | "markdown";
+  visibleOnlyTo?: Types.ObjectId | null;
   edited?: boolean;
   editedAt?: Date;
   reactions?: {
@@ -36,6 +38,18 @@ const schema = new Schema<Message>({
     type: Schema.Types.String,
     trim: false,
     maxlength: 100000,
+  },
+
+  contentFormat: {
+    type: Schema.Types.String,
+    enum: ["text", "markdown"],
+    default: "text",
+  },
+
+  visibleOnlyTo: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
   },
 
   edited: {

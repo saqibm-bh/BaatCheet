@@ -28,6 +28,7 @@ export const ChatProvider = ({ children }) => {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [typingByChat, setTypingByChat] = useState({});
   const [onlineUserIds, setOnlineUserIds] = useState(() => new Set());
+  const [aiStreamByChat, setAiStreamByChat] = useState({});
   // state to manage the left menu activeSidebar has three values: ["profile", "recentChats", "searchUser"]
   const [activeLeftSidebar, setActiveLeftSidebar] = useState("recentChats");
 
@@ -80,6 +81,7 @@ export const ChatProvider = ({ children }) => {
     setTypingByChat,
     updateLastMessageOfCurrentChat,
     setOnlineUserIds,
+    setAiStreamByChat,
   });
 
   const isChatTyping = (chatId) => {
@@ -210,6 +212,7 @@ export const ChatProvider = ({ children }) => {
         resetUnreadCount,
         isChatTyping,
         onlineUserIds,
+        aiStreamByChat,
       }}
     >
       {children}

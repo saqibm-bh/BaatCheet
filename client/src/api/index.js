@@ -95,10 +95,14 @@ export const summarizeChat = (chatId, options = {}) => {
 };
 
 // send a message
-export const sendMessage = (chatId, content, attachments) => {
+export const sendMessage = (chatId, content, attachments, options = {}) => {
   const formData = new FormData();
   if (content) {
     formData.append("content", content);
+  }
+
+  if (options?.isPrivateQuery) {
+    formData.append("isPrivateQuery", "true");
   }
 
   if (attachments) {

@@ -21,6 +21,12 @@ import { emitSocketEvent } from "../socket";
 import { ChatEventEnum } from "../constants";
 import Chat from "../database/model/Chat";
 import { cloudinary as cloudinaryConfig } from "../config";
+import {
+  buildAiContext,
+  getAiAssistantIdentity,
+  shouldTriggerAiForMessage,
+} from "../helpers/aiAssistant";
+import { streamOpenRouterResponse } from "../helpers/openRouterStream";
 
 export const getAllMessages = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
@@ -121,7 +127,7 @@ export const searchMessages = asyncHandler(
 // send a message
 export const sendMessage = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
-    const { content } = req.body;
+    const { content, isPrivateQuery } = req.body;
     const { chatId } = req.params;
 
     const currentUserId = req.user?._id;
@@ -200,10 +206,53 @@ export const sendMessage = asyncHandler(
       );
     });
 
-    return new SuccessResponse(
+    const response = new SuccessResponse(
       "message sent successfully",
       structuredMessage[0]
     ).send(res);
+
+    try {
+      const { userId: aiUserId, username: aiUsername } =
+        await getAiAssistantIdentity();
+
+      const shouldTriggerAi = shouldTriggerAiForMessage({
+        chatIsGroup: Boolean(selectedChat.isGroupChat),
+        chatParticipants: selectedChat.participants,
+        aiUserId,
+        senderId: new Types.ObjectId(currentUserId),
+        content: content || "",
+        aiUsername,
+      });
+
+      if (shouldTriggerAi) {
+        const contextLines = await buildAiContext(
+          new Types.ObjectId(chatId),
+          10,
+          new Types.ObjectId(currentUserId)
+        );
+        const imageUrls = attachmentFiles
+          .map((file) => file?.url)
+          .filter((url): url is string => Boolean(url));
+
+        streamOpenRouterResponse({
+          req,
+          chatId: new Types.ObjectId(chatId),
+          aiUserId,
+          participantIds: selectedChat.participants,
+          contextLines,
+          userMessage: content || "",
+          imageUrls,
+          isPrivateQuery: Boolean(isPrivateQuery),
+          senderId: new Types.ObjectId(currentUserId),
+        }).catch(() => {
+          // AI stream failures should not block chat delivery.
+        });
+      }
+    } catch (error) {
+      // AI context prep failure should not block message delivery.
+    }
+
+    return response;
   }
 );
 

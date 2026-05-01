@@ -12,6 +12,8 @@ export enum ChatEventEnum {
   STOP_TYPING_EVENT = "stopTyping",
   MESSAGE_UPDATE_EVENT = "messageUpdated",
   MESSAGE_REACTION_EVENT = "messageReactionUpdated",
+  MESSAGE_CHUNK_EVENT = "messageChunk",
+  MESSAGE_COMPLETE_EVENT = "messageComplete",
   ACTIVE_USERS_EVENT = "activeUsers",
   USER_ONLINE_EVENT = "userOnline",
   USER_OFFLINE_EVENT = "userOffline",

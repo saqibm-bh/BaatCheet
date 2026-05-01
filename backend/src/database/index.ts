@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { db } from "../config";
 import colorsUtils from "../helpers/colorsUtils";
 import seedRoles from "../seeds/seedRoles";
+import { ensureAiUser } from "../helpers/aiAssistant";
 
 // Keep URI as-is and pass dbName separately to avoid malformed Atlas URIs.
 const dbURI = db.url;
@@ -48,6 +49,7 @@ mongoose.connection.on("connected", () => {
 // seed the roles once db is opened
 mongoose.connection.once("open", async () => {
   await seedRoles();
+  await ensureAiUser();
 });
 
 mongoose.connection.on("disconnected", () => {

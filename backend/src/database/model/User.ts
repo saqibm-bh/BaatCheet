@@ -8,6 +8,7 @@ export default interface User {
   username: string;
   email: string;
   password: string;
+  isAI?: boolean;
   avatarUrl?: string;
   avatarPublicId?: string;
   bio?: string;
@@ -41,6 +42,11 @@ const schema = new Schema<User>({
     // minlength: 6,
     select: false,
     maxlength: 200,
+  },
+
+  isAI: {
+    type: Schema.Types.Boolean,
+    default: false,
   },
 
   avatarUrl: {

@@ -147,6 +147,7 @@ const searchAvailableUsers = (
         avatarUrl: 1,
         username: 1,
         email: 1,
+        isAI: 1,
       },
     },
   ]);

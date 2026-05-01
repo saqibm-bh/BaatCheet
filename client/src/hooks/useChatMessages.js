@@ -176,14 +176,19 @@ export const useChatMessages = ({
   };
 
   // send message
-  const sendChatMessage = async () => {
+  const sendChatMessage = async (options = {}) => {
     if (!socket || !currentSelectedChat.current?._id) return;
 
     setMessageError(null);
 
     await requestHandler(
       async () =>
-        await sendMessage(currentSelectedChat.current?._id, message, attachments),
+        await sendMessage(
+          currentSelectedChat.current?._id,
+          message,
+          attachments,
+          options
+        ),
       setSendingMessage,
       (res) => {
         setMessage("");

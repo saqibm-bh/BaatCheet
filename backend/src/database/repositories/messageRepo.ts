@@ -15,6 +15,7 @@ import Message, { MessageModel } from "../model/Message";
 type RecentChatMessage = {
   _id: Types.ObjectId;
   content?: string;
+  visibleOnlyTo?: Types.ObjectId | null;
   createdAt: Date;
   sender?: {
     _id?: Types.ObjectId;
@@ -52,6 +53,7 @@ const chatMessageCommonAggregator = (): PipelineStage[] => {
               username: 1,
               avatarUrl: 1,
               email: 1,
+              isAI: 1,
             },
           },
         ],
@@ -84,8 +86,8 @@ const getRecentMessagesByChatId = async (
   const recentMessages = await MessageModel.find({ chat: chatId })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate("sender", "username email")
-    .select("content createdAt sender attachments")
+    .populate("sender", "username email isAI")
+    .select("content contentFormat visibleOnlyTo createdAt sender attachments")
     .lean();
 
   // Reverse to preserve conversation order from oldest to newest in prompt context.
@@ -231,11 +233,15 @@ const createMessage = (
     localPath?: string;
     cloudinaryPublicId?: string;
     resourceType?: "image" | "video" | "raw";
-  }[]
+  }[],
+  contentFormat: "text" | "markdown" = "text",
+  visibleOnlyTo: Types.ObjectId | null = null
 ): Promise<any> => {
   return MessageModel.create({
     sender: userId,
     content: content,
+    contentFormat,
+    visibleOnlyTo,
     chat: chatId,
     attachments: attachemntFiles,
   });

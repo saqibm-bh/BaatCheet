@@ -39,6 +39,8 @@ const socketEvents = {
   LEAVE_CHAT_EVENT: "leaveChat",
   UPDATE_GROUP_NAME_EVENT: "updateGroupName",
   MESSAGE_DELETE_EVENT: "messageDeleted",
+  MESSAGE_CHUNK_EVENT: "messageChunk",
+  MESSAGE_COMPLETE_EVENT: "messageComplete",
   ACTIVE_USERS_EVENT: "activeUsers",
   USER_ONLINE_EVENT: "userOnline",
   USER_OFFLINE_EVENT: "userOffline",
