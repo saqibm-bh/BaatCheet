@@ -21,7 +21,7 @@
 
 BaatCheet is a full-stack real-time chat app that combines live messaging, media sharing, and a built-in Meta AI-style assistant in one experience. The assistant is not tucked away behind a separate page. It lives inside the chat, streams replies live, and can even answer privately inside shared conversations.
 
-This is the kind of project that shows both product thinking and engineering depth: real-time systems, AI integration, selective message visibility, media handling, and polished frontend UX.
+This  project shows both product thinking and engineering depth: real-time systems, AI integration, selective message visibility, media handling, and polished frontend UX.
 
 ## Why It Stands Out
 
@@ -57,7 +57,6 @@ This is the kind of project that shows both product thinking and engineering dep
 **AI and media**
 
 - OpenRouter for streamed in-chat AI responses
-- Google Gemini API for chat summaries
 - Cloudinary for file storage and delivery
 
 **Tooling**
@@ -87,9 +86,6 @@ Express + TypeScript API
         |
         |-- OpenRouter
         |     Streamed AI chat responses
-        |
-        |-- Gemini API
-        |     Conversation summaries
         |
         |-- Cloudinary
               Image and file uploads
@@ -146,7 +142,6 @@ Instead of waiting for the full assistant output, the app streams partial chunks
 - MongoDB local instance or MongoDB Atlas
 - Cloudinary account
 - OpenRouter API key
-- Gemini API key
 
 ### 1. Install dependencies
 
@@ -192,10 +187,6 @@ CLOUDINARY_MAX_RAW_SIZE_MB=20
 
 OPENROUTER_API_KEY=your_openrouter_api_key
 OPENROUTER_MODEL=google/gemini-2.5-flash
-
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-1.5-flash
-GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
 SUMMARY_MAX_MESSAGES=50
 ```
 
@@ -268,9 +259,6 @@ That starts:
 - `CLOUDINARY_MAX_RAW_SIZE_MB`: Max raw file upload size.
 - `OPENROUTER_API_KEY`: Key for streamed AI chat responses.
 - `OPENROUTER_MODEL`: OpenRouter model name.
-- `GEMINI_API_KEY`: Key for chat summaries.
-- `GEMINI_MODEL`: Gemini model name.
-- `GEMINI_BASE_URL`: Gemini API base URL.
 - `SUMMARY_MAX_MESSAGES`: Number of recent messages used for summaries.
 
 ### Client
