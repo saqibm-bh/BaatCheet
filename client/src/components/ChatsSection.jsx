@@ -1389,7 +1389,7 @@ export default function ChatsSection() {
           </div>
         )}
         
-        <div className="flex items-center gap-3 w-full max-w-5xl mx-auto">
+        <div className="flex items-center gap-2 sm:gap-3 w-full max-w-5xl mx-auto">
           {/* Attachment Buttons */}
           <div className="flex items-center gap-1">
             <label
@@ -1485,13 +1485,16 @@ export default function ChatsSection() {
               onClick={() => setIsPrivateQuery((prev) => !prev)}
               aria-label={isPrivateQuery ? "Disable private AI" : "Enable private AI"}
               data-tooltip={isPrivateQuery ? "Private view on" : "Private view off"}
-              className={`hci-tooltip h-12 w-12 flex items-center justify-center rounded-full border transition-all duration-300 shrink-0 ${
+              className={`hci-tooltip h-12 px-2.5 sm:px-3 min-w-[92px] sm:min-w-[104px] inline-flex items-center justify-center gap-1 sm:gap-1.5 rounded-full border transition-all duration-300 shrink-0 ${
                 isPrivateQuery
-                  ? "border-amber-400 bg-amber-500/10 text-amber-500"
-                  : "border-border bg-muted text-muted-foreground hover:text-foreground"
+                  ? "border-amber-500/70 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                  : "border-border/80 bg-muted text-muted-foreground hover:text-foreground hover:border-border"
               }`}
             >
-              {isPrivateQuery ? <FiEyeOff className="text-xl" /> : <FiEye className="text-xl" />}
+              {isPrivateQuery ? <FiEyeOff className="text-lg shrink-0" /> : <FiEye className="text-lg shrink-0" />}
+              <span className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide leading-none whitespace-nowrap">
+                Private
+              </span>
             </button>
           )}
 
@@ -1504,7 +1507,7 @@ export default function ChatsSection() {
             }}
             aria-label="Send message"
             data-tooltip="Send"
-            className="hci-tooltip h-12 w-12 flex items-center justify-center bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 text-primary-foreground rounded-full shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none transition-all duration-300 active:scale-90 shrink-0 ml-2"
+            className="hci-tooltip h-12 w-12 flex items-center justify-center bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/30 text-primary-foreground rounded-full shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none transition-all duration-300 active:scale-90 shrink-0 ml-1 sm:ml-2"
           >
             {sendingMessage ? (
               <span className="flex items-center gap-1">
