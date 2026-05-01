@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import axios from "axios";
 import asyncHandler from "../helpers/asyncHandler";
 import userRepo from "../database/repositories/userRepo";
 import {
@@ -19,7 +18,7 @@ import { ProtectedRequest } from "../types/app-request";
 import { removeLocalFile } from "../helpers/utils";
 import messageRepo from "../database/repositories/messageRepo";
 import { deleteFromCloudinary } from "../helpers/cloudinary";
-import { ai } from "../config";
+import { ai, openrouter } from "../config";
 
 // search available users
 const searchAvailableusers = asyncHandler(
@@ -353,7 +352,7 @@ const summarizeChat = asyncHandler(
       throw new BadRequestError("no chatId provided");
     }
 
-    if (!ai.geminiApiKey) {
+    if (!openrouter.apiKey) {
       throw new InternalError("AI summary service is not configured");
     }
 
@@ -397,72 +396,60 @@ const summarizeChat = asyncHandler(
       })
       .join("\n");
 
-    const prompt = `Summarize the following conversation concisely: ${formattedMessages}`;
+    const prompt = [
+      "Summarize the following conversation in 3-5 concise bullet points.",
+      "Focus on the key requests, decisions, and follow-ups.",
+      "Keep the output clear and practical.",
+      "",
+      formattedMessages,
+    ].join("\n");
 
     let summary = "";
 
     try {
-      const endpoint =
-        `${ai.geminiBaseUrl.replace(/\/$/, "")}/models/` +
-        `${encodeURIComponent(ai.geminiModel)}:generateContent`;
-
-      const response = await axios.post(
-        endpoint,
-        {
-          systemInstruction: {
-            parts: [
-              {
-                text: "You are a concise assistant. Summarize conversations in 3-5 bullet points.",
-              },
-            ],
-          },
-          contents: [
+      const response = await fetch(openrouter.baseUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openrouter.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: openrouter.model,
+          stream: false,
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a concise assistant. Summarize conversations in 3-5 crisp bullet points.",
+            },
             {
               role: "user",
-              parts: [{ text: prompt }],
+              content: prompt,
             },
           ],
-          generationConfig: {
-            temperature: 0.2,
-          },
-        },
-        {
-          params: {
-            key: ai.geminiApiKey,
-          },
-          headers: {
-            "Content-Type": "application/json",
-          },
-          timeout: 20000,
-        }
-      );
+          temperature: 0.2,
+        }),
+      });
 
-      const parts = response.data?.candidates?.[0]?.content?.parts || [];
-      summary = parts
-        .map((part: { text?: string }) => part?.text || "")
-        .join("\n")
-        .trim();
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "OpenRouter summary request failed");
+      }
+
+      const data = await response.json();
+      summary = (
+        data?.choices?.[0]?.message?.content ||
+        data?.choices?.[0]?.text ||
+        ""
+      ).trim();
     } catch (error) {
-      console.log(error);
-
-      if (axios.isAxiosError(error)) {
-        const responseData = error.response?.data;
-        const responseDetails =
-          responseData
-            ? typeof responseData === "string"
-              ? responseData
-              : JSON.stringify(responseData)
-            : "unknown error";
-        const errorMessage = error.message || responseDetails;
-
+      if (error instanceof Error) {
         throw new InternalError(
-          `AI summary service request failed: ${errorMessage}`
+          `AI summary service request failed: ${error.message}`
         );
       }
 
-      const fallbackMessage =
-        error instanceof Error ? error.message : "unable to generate chat summary";
-      throw new InternalError(fallbackMessage);
+      throw new InternalError("unable to generate chat summary");
     }
 
     if (!summary) {

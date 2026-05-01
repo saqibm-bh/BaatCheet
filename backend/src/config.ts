@@ -57,11 +57,6 @@ export const tokenInfo = {
 };
 
 export const ai = {
-  geminiApiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || "",
-  geminiModel:
-    process.env.GEMINI_MODEL || process.env.OPENAI_MODEL || "gemini-1.5-flash",
-  geminiBaseUrl:
-    process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta",
   maxSummaryMessages: parsePositiveIntOrDefault(
     process.env.SUMMARY_MAX_MESSAGES,
     50
@@ -70,7 +65,7 @@ export const ai = {
 
 export const openrouter = {
   apiKey: process.env.OPENROUTER_API_KEY || "",
-  model: process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
+  model: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
   baseUrl: "https://openrouter.ai/api/v1/chat/completions",
 };
 

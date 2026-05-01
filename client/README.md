@@ -1,95 +1,131 @@
-# BaatCheet — Frontend
+# BaatCheet Frontend
 
-React app for BaatCheet (Vite + Tailwind). Talks to the backend over HTTP and Socket.IO.
+React + Vite client for BaatCheet. This app handles the chat UI, AI interaction layer, private AI view, real-time updates, media previews, and WebRTC calling experience.
+
+## What This App Covers
+
+- Login and registration flows
+- Real-time chat UI for 1-on-1 and group chats
+- Embedded AI assistant triggers like `@AI` and `/ai`
+- Private AI mode toggle inside chats
+- Streaming AI response rendering
+- Media attachments, previews, and downloads
+- Message editing, reactions, search, and summaries
+- WebRTC video calling
+- Theming and polished desktop-first chat UX
+
+## Frontend Highlights
+
+- Uses React context to coordinate auth, chat, socket, and WebRTC state.
+- Splits network and socket logic into hooks like `useChatMessages` and `useChatSocketListeners`.
+- Renders AI markdown responses progressively during live streams.
+- Filters private AI messages in the UI so hidden responses stay visible only to the requester.
+- Uses Tailwind plus CSS variables for theming and layout consistency.
 
 ## Requirements
 
 - Node.js 18+
-- Backend running at `https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net`
+- Running BaatCheet backend on `http://localhost:5000` or your deployed API URL
 
-## Run locally
+## Run Locally
 
-```sh
+### 1. Install
+
+```bash
 npm install
 ```
 
-Create `.env` from the sample:
+### 2. Create `.env`
 
-- Windows (PowerShell):
-  ```sh
-  copy .env.sample .env
-  ```
-- macOS / Linux:
-  ```sh
-  cp .env.sample .env
-  ```
+You can copy the sample:
 
-Typical local values:
-
-```env
-VITE_API_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
-
-# Optional overrides (if omitted, these fall back to VITE_API_URL)
-VITE_SOCKET_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
-VITE_SIGNALING_URL=https://baatcheet-backend-dweybkd0esdvazfp.westeurope-01.azurewebsites.net
+```bash
+copy .env.sample .env
 ```
 
-Start the dev server:
+Recommended local config:
 
-```sh
+```env
+VITE_API_URL=http://localhost:5000
+VITE_SERVER_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
+VITE_SIGNALING_URL=http://localhost:5000
+```
+
+Important note: the current socket and WebRTC layers read `VITE_SERVER_URL`, so keep that set even if `VITE_API_URL` is present.
+
+### 3. Start dev server
+
+```bash
 npm run dev
 ```
 
 Open `http://localhost:5173`.
 
-> If `npm install` fails with a peer dependency conflict, try `npm install --legacy-peer-deps`.
+If install fails because of dependency resolution on your machine, try:
 
-## Run with Docker Compose
+```bash
+npm install --legacy-peer-deps
+```
 
-When you run `docker compose up --build` from the repo root, the frontend is served by nginx on:
+## Docker
 
-- `http://localhost:3002`
+From the repo root:
 
-In that setup, the backend must allow `http://localhost:3002` via `FRONTEND_URL`.
+```bash
+docker compose up --build
+```
 
-## Environment variables
+In Docker, the frontend is served through nginx on `http://localhost:3002`.
 
-- All client env vars must start with `VITE_` (this is a Vite rule).
-- `VITE_API_URL` is the API base URL used by Axios.
-- `VITE_SOCKET_URL` is the Socket.IO server URL (optional, defaults to `VITE_API_URL`).
-- `VITE_SIGNALING_URL` is used for video call signaling (optional, defaults to `VITE_SOCKET_URL` then `VITE_API_URL`).
+## Environment Variables
 
-Legacy compatibility:
+- `VITE_API_URL`: Base URL for HTTP API requests.
+- `VITE_SERVER_URL`: Base URL currently used by Socket.IO and WebRTC connection logic.
+- `VITE_SOCKET_URL`: Present in the sample env as an optional override.
+- `VITE_SIGNALING_URL`: Present in the sample env as an optional override.
 
-- The app still accepts `VITE_SERVER_URL`, `VITE_SOCKET_URI`, and `VITE_SIGNALLING_SERVER_URL` if present.
+Legacy compatibility still exists for:
+
+- `VITE_SERVER_URL`
+- `VITE_SOCKET_URI`
+- `VITE_SIGNALLING_SERVER_URL`
 
 ## Scripts
 
-```sh
-npm run dev       # Vite dev server
-npm run build     # Production build
-npm run preview   # Preview the production build
-npm run lint      # ESLint
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run lint
 ```
 
-## Code structure (quick tour)
+## App Structure
 
-The UI stays mostly “dumb” and reads state from context. Network/socket logic lives in hooks.
-
-```
+```text
 src/
-├── api/           # API helper functions
-├── components/    # UI components
-├── context/       # App-wide state (auth/chat/socket)
-├── hooks/         # Reusable logic (messages, socket listeners, composer, etc.)
-├── pages/         # Login / Register / Chat
-└── utils/         # Small client utilities
+|-- api/          # Axios helpers and request functions
+|-- assets/       # Icons, images, audio
+|-- components/   # Chat UI and shared interface pieces
+|-- context/      # Auth, chat, socket, theme, WebRTC state
+|-- hooks/        # Reusable message and socket logic
+|-- pages/        # Login, register, chat
+|-- config/       # Runtime env helpers
+|-- utils/        # Client helpers
+|-- App.jsx
+`-- main.jsx
 ```
 
-Styling is Tailwind + CSS variables (see `src/index.css`). That’s what makes light/dark theming work cleanly.
+## UX Features Worth Calling Out
 
-## Common issues
+- AI replies stream live into the timeline before the final message lands.
+- Private AI mode visually marks hidden assistant responses as visible only to the current user.
+- Group chats display sender labels, reactions, search matches, and attachment previews cleanly.
+- WebRTC calling is wired into the same product flow instead of living as a separate demo.
 
-- App loads but requests fail: check `VITE_API_URL` points to your backend.
-- Real-time events not working: check `VITE_SOCKET_URL` (or `VITE_API_URL`) and that the backend is running.
-- CORS errors: backend `FRONTEND_URL` must match your frontend origin (5173 for local, 3002 for Docker).
+## Common Issues
+
+- If the app loads but requests fail, check `VITE_API_URL`.
+- If sockets are not connecting, verify `VITE_SERVER_URL`.
+- If video calling fails, confirm the backend is reachable and the browser has camera and mic permission.
+- If CORS errors appear, make sure backend `FRONTEND_URL` matches your frontend origin.
