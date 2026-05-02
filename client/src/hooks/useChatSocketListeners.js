@@ -28,21 +28,36 @@ export const useChatSocketListeners = ({
   // ie when a new message is sent to the server and the server sends a event to participants of chat with current message
 
   // const onMessageReceived = useCallback(message) => {
-  const onMessageReceived = useCallback((message) => {
-    const incomingChatId = normalizeChatId(message?.chat);
-    const selectedChatId = normalizeChatId(currentSelectedChat.current?._id);
+  const onMessageReceived = useCallback((incomingMessage) => {
+    console.log("FRONTEND HEARD SOCKET: ", incomingMessage);
+
+    const rawIncomingChatId =
+      incomingMessage?.chatId ??
+      incomingMessage?.chat?._id ??
+      incomingMessage?.chat;
+    const activeChatId = currentSelectedChat.current?._id;
+
+    console.log(
+      "COMPARING ROOMS: incoming msg chatId:",
+      rawIncomingChatId,
+      " | current activeChatId:",
+      activeChatId
+    );
+
+    const incomingChatId = String(normalizeChatId(rawIncomingChatId));
+    const selectedChatId = String(normalizeChatId(activeChatId));
     const isCurrentChatOpen = selectedChatId && incomingChatId
-      ? selectedChatId === incomingChatId
+      ? String(incomingChatId) === String(selectedChatId)
       : false;
 
     if (isCurrentChatOpen) {
       setMessages((prevMsgs) => {
         const alreadyExists = prevMsgs.some(
-          (msg) => msg?._id?.toString?.() === message?._id?.toString?.()
+          (msg) => msg?._id?.toString?.() === incomingMessage?._id?.toString?.()
         );
 
         if (alreadyExists) return prevMsgs;
-        return [...prevMsgs, message];
+        return [...prevMsgs, incomingMessage];
       });
       setUnreadCounts((prevCounts) => ({
         ...prevCounts,
@@ -55,9 +70,9 @@ export const useChatSocketListeners = ({
       }));
     }
 
-    if (!message.visibleOnlyTo) {
+    if (!incomingMessage.visibleOnlyTo) {
       // update the last message of the current chat
-      updateLastMessageOfCurrentChat(incomingChatId, message);
+      updateLastMessageOfCurrentChat(incomingChatId, incomingMessage);
     }
   }, [
     currentSelectedChat,

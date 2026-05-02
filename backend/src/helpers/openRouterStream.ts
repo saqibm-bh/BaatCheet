@@ -60,10 +60,11 @@ const emitToStreamTarget = (
   event: ChatEventEnum,
   payload: any
 ): void => {
+  const chatRoomId = options.chatId.toString();
   const targetRoom =
     options.isPrivateQuery && options.senderId
       ? options.senderId.toString()
-      : options.chatId.toString();
+      : chatRoomId;
 
   emitSocketEvent(options.req, targetRoom, event, payload);
 };
@@ -222,6 +223,8 @@ export const streamOpenRouterResponse = async (
       structuredMessage[0],
       options.chatId
     );
+    const newAiMessage = normalizedStructuredMessage;
+    const chatId = options.chatId.toString();
 
     emitToStreamTarget(options, ChatEventEnum.MESSAGE_COMPLETE_EVENT, {
       ...streamMetadata,
@@ -229,6 +232,12 @@ export const streamOpenRouterResponse = async (
     });
 
     if (options.isPrivateQuery && options.senderId) {
+      console.log(
+        "BACKEND EMIT: Sending AI message to room:",
+        chatId,
+        " | Message ID:",
+        newAiMessage?._id
+      );
       emitSocketEvent(
         options.req,
         options.senderId.toString(),
@@ -236,6 +245,12 @@ export const streamOpenRouterResponse = async (
         normalizedStructuredMessage
       );
     } else {
+      console.log(
+        "BACKEND EMIT: Sending AI message to room:",
+        chatId,
+        " | Message ID:",
+        newAiMessage?._id
+      );
       options.participantIds.forEach((participantId: Types.ObjectId) => {
         emitSocketEvent(
           options.req,
