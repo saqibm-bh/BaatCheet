@@ -77,7 +77,7 @@ export const getAiAssistantIdentity = async (): Promise<{
   };
 };
 
-export const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$))/i;
+export const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$)|\/tone(?:\s|$))/i;
 
 export const isAiTriggerMessage = (content: string): boolean => {
   return AI_TRIGGER_REGEX.test(content || "");

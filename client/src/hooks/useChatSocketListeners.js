@@ -186,6 +186,11 @@ export const useChatSocketListeners = ({
   const onMessageChunk = useCallback(
     (payload) => {
       if (!payload?.chatId || !payload?.chunk) return;
+      console.log("[AI][socket] messageChunk", {
+        chatId: payload.chatId,
+        chunkLength: payload.chunk?.length || 0,
+        isPrivateQuery: payload.isPrivateQuery,
+      });
 
       setAiStreamByChat((prev) => {
         const previousEntry = prev[payload.chatId] || {
@@ -213,6 +218,7 @@ export const useChatSocketListeners = ({
   const onMessageStreamStart = useCallback(
     (payload) => {
       if (!payload?.chatId) return;
+      console.log("[AI][socket] messageStreamStart", payload);
 
       setAiStreamByChat((prev) => ({
         ...prev,
@@ -230,6 +236,10 @@ export const useChatSocketListeners = ({
   const onMessageComplete = useCallback(
     (payload) => {
       if (!payload?.chatId) return;
+      console.log("[AI][socket] messageComplete", {
+        chatId: payload.chatId,
+        hasMessage: Boolean(payload.message),
+      });
 
       setAiStreamByChat((prev) => {
         if (!prev[payload.chatId]) return prev;
@@ -244,6 +254,7 @@ export const useChatSocketListeners = ({
   const onMessageStreamError = useCallback(
     (payload) => {
       if (!payload?.chatId) return;
+      console.error("[AI][socket] messageStreamError", payload);
 
       setAiStreamByChat((prev) => ({
         ...prev,

@@ -71,6 +71,13 @@ const emitToStreamTarget = (
 export const streamOpenRouterResponse = async (
   options: OpenRouterStreamOptions
 ): Promise<void> => {
+  console.log("[AI][stream] start", {
+    chatId: options.chatId.toString(),
+    isPrivateQuery: Boolean(options.isPrivateQuery),
+    senderId: options.senderId?.toString?.(),
+    contextCount: options.contextMessages?.length || 0,
+    imageCount: options.imageUrls?.length || 0,
+  });
   const streamMetadata = {
     chatId: options.chatId.toString(),
     senderId: options.aiUserId.toString(),
@@ -105,8 +112,17 @@ export const streamOpenRouterResponse = async (
 
     if (!response.ok || !response.body) {
       const errorText = await response.text();
+      console.error("[AI][stream] OpenRouter non-OK response", {
+        status: response.status,
+        chatId: options.chatId.toString(),
+        errorText: errorText?.slice?.(0, 300),
+      });
       throw new Error(`OpenRouter request failed: ${errorText}`);
     }
+    console.log("[AI][stream] OpenRouter response accepted", {
+      chatId: options.chatId.toString(),
+      status: response.status,
+    });
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
@@ -151,6 +167,10 @@ export const streamOpenRouterResponse = async (
     if (!normalizedText) {
       throw new Error("OpenRouter returned an empty response");
     }
+    console.log("[AI][stream] completed text", {
+      chatId: options.chatId.toString(),
+      charCount: normalizedText.length,
+    });
 
     const aiMessage = await messageRepo.createMessage(
       options.aiUserId,
@@ -199,6 +219,10 @@ export const streamOpenRouterResponse = async (
       });
     }
   } catch (error) {
+    console.error("[AI][stream] failed", {
+      chatId: options.chatId.toString(),
+      error: error instanceof Error ? error.message : String(error),
+    });
     emitToStreamTarget(options, ChatEventEnum.MESSAGE_STREAM_ERROR_EVENT, {
       ...streamMetadata,
       message: "AI is currently unavailable. Please try again shortly.",

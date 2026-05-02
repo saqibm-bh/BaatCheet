@@ -30,7 +30,7 @@ import { searchChatMessages } from "../api";
 import ReactMarkdown from "react-markdown";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
-const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$))/i;
+const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$)|\/tone(?:\s|$))/i;
 
 const MessageCont = ({
   isOwnMessage,
@@ -124,12 +124,16 @@ const MessageCont = ({
                 : "ring-1 ring-amber-300/70"
               : ""
           } ${
-            isPrivateMessage ? "border border-dashed border-amber-400/60 !bg-amber-50 dark:!bg-amber-950/40 !text-foreground" : ""
+            isPrivateMessage
+              ? "border border-dashed border-orange-500/80 dark:border-orange-400/80 bg-orange-50 dark:bg-orange-950/40 text-orange-900 dark:text-orange-100"
+              : ""
           }`}
         >
           {isPrivateMessage && (
             <span className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${
-              isOwnMessage ? "text-primary-foreground/80" : "text-amber-500"
+              isOwnMessage
+                ? "text-orange-700 dark:text-orange-300"
+                : "text-orange-700 dark:text-orange-300"
             }`}>
               Private - only visible to you
             </span>

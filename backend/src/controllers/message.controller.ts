@@ -139,6 +139,13 @@ export const sendMessage = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
     const { content, isPrivate, isPrivateQuery } = req.body;
     const { chatId } = req.params;
+    console.log("[AI][sendMessage] incoming", {
+      chatId,
+      userId: req.user?._id?.toString?.(),
+      contentPreview: typeof content === "string" ? content.slice(0, 120) : "",
+      isPrivate,
+      isPrivateQuery,
+    });
 
     const currentUserId = req.user?._id;
     const files = (req.files as { attachments?: Express.Multer.File[] }) || {
@@ -195,6 +202,12 @@ export const sendMessage = asyncHandler(
     const shouldSaveAsPrivate =
       shouldAttemptAiQuery &&
       (parseBooleanFlag(isPrivate) || parseBooleanFlag(isPrivateQuery));
+    console.log("[AI][sendMessage] parsed flags", {
+      triggerDerivedAiQuery,
+      shouldAttemptAiQuery,
+      shouldSaveAsPrivate,
+      strippedPromptPreview: stripAiTrigger(normalizedContent).slice(0, 120),
+    });
 
     // create a new message with attachmentsFiles
     const message = await messageRepo.createMessage(
@@ -257,6 +270,11 @@ export const sendMessage = asyncHandler(
         senderId: new Types.ObjectId(currentUserId),
         content: normalizedContent,
       });
+      console.log("[AI][sendMessage] trigger decision", {
+        shouldTriggerAi,
+        aiUserId: aiUserId.toString(),
+        chatId,
+      });
 
       if (shouldTriggerAi) {
         const contextMessages = await buildAiContextMessages(
@@ -267,6 +285,12 @@ export const sendMessage = asyncHandler(
         const imageUrls = attachmentFiles
           .map((file) => file?.url)
           .filter((url): url is string => Boolean(url));
+        console.log("[AI][sendMessage] starting stream", {
+          chatId,
+          contextCount: contextMessages.length,
+          imageCount: imageUrls.length,
+          isPrivateQuery: shouldSaveAsPrivate,
+        });
 
         void streamOpenRouterResponse({
           req,
@@ -279,6 +303,10 @@ export const sendMessage = asyncHandler(
           isPrivateQuery: shouldSaveAsPrivate,
           senderId: new Types.ObjectId(currentUserId),
         }).catch(() => {
+          console.error("[AI][sendMessage] streamOpenRouterResponse rejected", {
+            chatId,
+            userId: currentUserId?.toString?.(),
+          });
           emitSocketEvent(
             req,
             currentUserId.toString(),
@@ -293,7 +321,21 @@ export const sendMessage = asyncHandler(
         });
       }
     } catch (error) {
-      // AI context prep failure should not block message delivery.
+      console.error("[AI][sendMessage] AI prep failed", {
+        chatId,
+        userId: currentUserId?.toString?.(),
+        error: error instanceof Error ? error.message : String(error),
+      });
+      emitSocketEvent(
+        req,
+        currentUserId.toString(),
+        ChatEventEnum.MESSAGE_STREAM_ERROR_EVENT,
+        {
+          chatId,
+          isPrivateQuery: shouldSaveAsPrivate,
+          message: "AI is currently unavailable. Please try again shortly.",
+        }
+      );
     }
 
     return response;
