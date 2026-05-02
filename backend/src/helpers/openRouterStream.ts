@@ -68,6 +68,28 @@ const emitToStreamTarget = (
   emitSocketEvent(options.req, targetRoom, event, payload);
 };
 
+const emitAiTyping = (
+  options: OpenRouterStreamOptions,
+  event: ChatEventEnum
+) => {
+  const typingPayload = {
+    chatId: options.chatId.toString(),
+    userId: options.aiUserId.toString(),
+    userName: "AI Assistant",
+    isAi: true,
+  };
+
+  emitToStreamTarget(options, event, typingPayload);
+};
+
+const normalizeSocketMessage = (message: any, chatId: Types.ObjectId) => {
+  if (!message) return message;
+  return {
+    ...message,
+    chat: chatId.toString(),
+  };
+};
+
 export const streamOpenRouterResponse = async (
   options: OpenRouterStreamOptions
 ): Promise<void> => {
@@ -89,6 +111,7 @@ export const streamOpenRouterResponse = async (
     ChatEventEnum.MESSAGE_STREAM_START_EVENT,
     streamMetadata
   );
+  emitAiTyping(options, ChatEventEnum.START_TYPING_EVENT);
 
   try {
     if (!openrouter.apiKey) {
@@ -195,10 +218,14 @@ export const streamOpenRouterResponse = async (
     if (!structuredMessage.length) {
       throw new Error("Unable to structure AI message");
     }
+    const normalizedStructuredMessage = normalizeSocketMessage(
+      structuredMessage[0],
+      options.chatId
+    );
 
     emitToStreamTarget(options, ChatEventEnum.MESSAGE_COMPLETE_EVENT, {
       ...streamMetadata,
-      message: structuredMessage[0],
+      message: normalizedStructuredMessage,
     });
 
     if (options.isPrivateQuery && options.senderId) {
@@ -206,7 +233,7 @@ export const streamOpenRouterResponse = async (
         options.req,
         options.senderId.toString(),
         ChatEventEnum.MESSAGE_RECEIVED_EVENT,
-        structuredMessage[0]
+        normalizedStructuredMessage
       );
     } else {
       options.participantIds.forEach((participantId: Types.ObjectId) => {
@@ -214,7 +241,7 @@ export const streamOpenRouterResponse = async (
           options.req,
           participantId.toString(),
           ChatEventEnum.MESSAGE_RECEIVED_EVENT,
-          structuredMessage[0]
+          normalizedStructuredMessage
         );
       });
     }
@@ -227,5 +254,7 @@ export const streamOpenRouterResponse = async (
       ...streamMetadata,
       message: "AI is currently unavailable. Please try again shortly.",
     });
+  } finally {
+    emitAiTyping(options, ChatEventEnum.STOP_TYPING_EVENT);
   }
 };

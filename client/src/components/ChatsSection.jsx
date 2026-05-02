@@ -433,6 +433,7 @@ export default function ChatsSection() {
     setIsChatSelected,
     resetUnreadCount,
     isChatTyping,
+    getTypingUsersForChat,
     aiStreamByChat,
   } = useChat();
   const { user } = useAuth();
@@ -477,6 +478,7 @@ export default function ChatsSection() {
   const isGroupChat = !!currentSelectedChat.current?.isGroupChat;
   const selectedChatId = currentSelectedChat.current?._id;
   const isTypingInSelectedChat = isChatTyping(selectedChatId);
+  const typingUsersInSelectedChat = getTypingUsersForChat(selectedChatId);
   const streamingEntry = selectedChatId ? aiStreamByChat?.[selectedChatId] : null;
   const isStreaming = Boolean(streamingEntry);
   const hasAiTrigger = AI_TRIGGER_REGEX.test(message);
@@ -575,7 +577,12 @@ export default function ChatsSection() {
   const emitStopTyping = () => {
     if (!socket || !selectedChatId || !isTypingRef.current) return;
 
-    socket.emit(socketEvents.STOP_TYPING_EVENT, selectedChatId);
+    socket.emit(socketEvents.STOP_TYPING_EVENT, {
+      chatId: selectedChatId,
+      userId: user?._id,
+      userName: user?.username || user?.email || "You",
+      isAi: false,
+    });
     isTypingRef.current = false;
 
     if (typingTimeoutRef.current) {
@@ -945,6 +952,21 @@ export default function ChatsSection() {
                 ? "Active now"
                 : "Fetching participant"}
             </span>
+            {typingUsersInSelectedChat.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-primary font-medium mt-0.5">
+                <span>
+                  {typingUsersInSelectedChat[0]?.userName || "Someone"}{" "}
+                  {typingUsersInSelectedChat.length > 1
+                    ? "and others are typing..."
+                    : "is typing..."}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "120ms" }} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "240ms" }} />
+                </span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -1490,9 +1512,14 @@ export default function ChatsSection() {
                  if (socket && selectedChatId) {
                    if (val.trim()) {
                      if (!isTypingRef.current) {
-                       socket.emit(socketEvents.START_TYPING_EVENT, selectedChatId);
-                       isTypingRef.current = true;
-                     }
+                        socket.emit(socketEvents.START_TYPING_EVENT, {
+                          chatId: selectedChatId,
+                          userId: user?._id,
+                          userName: user?.username || user?.email || "You",
+                          isAi: false,
+                        });
+                        isTypingRef.current = true;
+                      }
 
                      scheduleStopTyping();
                    } else {

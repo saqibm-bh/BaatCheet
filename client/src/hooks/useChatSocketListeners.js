@@ -9,18 +9,31 @@ export const useChatSocketListeners = ({
   setUnreadCounts,
   setCurrentUserChats,
   setTypingByChat,
+  setTypingUsersByChat,
   updateLastMessageOfCurrentChat,
   setOnlineUserIds,
   setAiStreamByChat,
 }) => {
   const streamErrorTimeoutsRef = useRef({});
+  const normalizeChatId = useCallback((value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object" && value._id) {
+      return value._id?.toString?.() || "";
+    }
+    return value?.toString?.() || "";
+  }, []);
 
   // handle on message received event from server
   // ie when a new message is sent to the server and the server sends a event to participants of chat with current message
 
   // const onMessageReceived = useCallback(message) => {
   const onMessageReceived = useCallback((message) => {
-    const isCurrentChatOpen = currentSelectedChat.current?._id === message.chat;
+    const incomingChatId = normalizeChatId(message?.chat);
+    const selectedChatId = normalizeChatId(currentSelectedChat.current?._id);
+    const isCurrentChatOpen = selectedChatId && incomingChatId
+      ? selectedChatId === incomingChatId
+      : false;
 
     if (isCurrentChatOpen) {
       setMessages((prevMsgs) => {
@@ -33,21 +46,22 @@ export const useChatSocketListeners = ({
       });
       setUnreadCounts((prevCounts) => ({
         ...prevCounts,
-        [message.chat]: 0,
+        [incomingChatId]: 0,
       }));
     } else {
       setUnreadCounts((prevCounts) => ({
         ...prevCounts,
-        [message.chat]: (prevCounts[message.chat] || 0) + 1,
+        [incomingChatId]: (prevCounts[incomingChatId] || 0) + 1,
       }));
     }
 
     if (!message.visibleOnlyTo) {
       // update the last message of the current chat
-      updateLastMessageOfCurrentChat(message.chat, message);
+      updateLastMessageOfCurrentChat(incomingChatId, message);
     }
   }, [
     currentSelectedChat,
+    normalizeChatId,
     setMessages,
     setUnreadCounts,
     updateLastMessageOfCurrentChat,
@@ -97,28 +111,95 @@ export const useChatSocketListeners = ({
   );
 
   const onStartTyping = useCallback(
-    (chatId) => {
+    (payload) => {
+      const chatId =
+        typeof payload === "string" ? payload : payload?.chatId;
       if (!chatId) return;
 
       setTypingByChat((prev) => ({
         ...prev,
         [chatId]: true,
       }));
+
+      if (typeof payload === "object" && payload?.userName) {
+        setTypingUsersByChat((prev) => {
+          const current = prev[chatId] || [];
+          const uniqueKey = payload.userId || `${payload.userName}-${payload.isAi ? "ai" : "human"}`;
+          const exists = current.some(
+            (entry) => (entry.userId || `${entry.userName}-${entry.isAi ? "ai" : "human"}`) === uniqueKey
+          );
+          if (exists) return prev;
+
+          return {
+            ...prev,
+            [chatId]: [
+              ...current,
+              {
+                userId: payload.userId,
+                userName: payload.userName,
+                isAi: Boolean(payload.isAi),
+              },
+            ],
+          };
+        });
+      }
     },
-    [setTypingByChat]
+    [setTypingByChat, setTypingUsersByChat]
   );
 
   const onStopTyping = useCallback(
-    (chatId) => {
+    (payload) => {
+      const chatId =
+        typeof payload === "string" ? payload : payload?.chatId;
       if (!chatId) return;
 
-      setTypingByChat((prev) => {
+      const stopUserId =
+        typeof payload === "object" ? payload?.userId : null;
+      const stopUserName =
+        typeof payload === "object" ? payload?.userName : null;
+      const stopIsAi =
+        typeof payload === "object" ? Boolean(payload?.isAi) : false;
+
+      setTypingUsersByChat((prev) => {
+        const current = prev[chatId] || [];
+        let nextUsers = current;
+
+        if (stopUserId || stopUserName) {
+          nextUsers = current.filter((entry) => {
+            if (stopUserId) {
+              return entry.userId !== stopUserId;
+            }
+
+            return !(
+              entry.userName === stopUserName &&
+              Boolean(entry.isAi) === stopIsAi
+            );
+          });
+        } else {
+          nextUsers = [];
+        }
+
         const next = { ...prev };
-        delete next[chatId];
+        if (nextUsers.length) {
+          next[chatId] = nextUsers;
+        } else {
+          delete next[chatId];
+        }
+
+        setTypingByChat((prevTyping) => {
+          const nextTyping = { ...prevTyping };
+          if (nextUsers.length) {
+            nextTyping[chatId] = true;
+          } else {
+            delete nextTyping[chatId];
+          }
+          return nextTyping;
+        });
+
         return next;
       });
     },
-    [setTypingByChat]
+    [setTypingByChat, setTypingUsersByChat]
   );
 
   const onNewChat = useCallback(

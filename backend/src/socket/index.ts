@@ -31,6 +31,13 @@ interface IceCandidatePayload {
   didIOffer: boolean | { current?: boolean };
 }
 
+interface TypingPayload {
+  chatId: string;
+  userId?: string;
+  userName?: string;
+  isAi?: boolean;
+}
+
 interface ActiveCallOffer {
   offererUserId: string;
   answererUserId: string;
@@ -116,15 +123,35 @@ const mountJoinChatEvent = (socket: Socket): void => {
 
 // handle the start Typing event
 const mountStartTypingEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.START_TYPING_EVENT, (chatId: string) => {
-    socket.in(chatId).emit(ChatEventEnum.START_TYPING_EVENT, chatId);
+  socket.on(ChatEventEnum.START_TYPING_EVENT, (payload: string | TypingPayload) => {
+    const chatId = typeof payload === "string" ? payload : payload?.chatId;
+    if (!chatId?.trim()) return;
+
+    const typingPayload: TypingPayload = {
+      chatId: chatId.trim(),
+      userId: socket.user?._id?.toString(),
+      userName: socket.user?.username || socket.user?.email || "Unknown user",
+      isAi: false,
+    };
+
+    socket.to(chatId).emit(ChatEventEnum.START_TYPING_EVENT, typingPayload);
   });
 };
 
 // handle the stop Typing event
 const mountStopTypingEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.STOP_TYPING_EVENT, (chatId: string) => {
-    socket.in(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, chatId);
+  socket.on(ChatEventEnum.STOP_TYPING_EVENT, (payload: string | TypingPayload) => {
+    const chatId = typeof payload === "string" ? payload : payload?.chatId;
+    if (!chatId?.trim()) return;
+
+    const stopPayload: TypingPayload = {
+      chatId: chatId.trim(),
+      userId: socket.user?._id?.toString(),
+      userName: socket.user?.username || socket.user?.email || "Unknown user",
+      isAi: false,
+    };
+
+    socket.to(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, stopPayload);
   });
 };
 

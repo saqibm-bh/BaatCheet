@@ -27,6 +27,7 @@ export const ChatProvider = ({ children }) => {
   const [attachments, setAttachments] = useState([]); // state to store files
   const [unreadCounts, setUnreadCounts] = useState({});
   const [typingByChat, setTypingByChat] = useState({});
+  const [typingUsersByChat, setTypingUsersByChat] = useState({});
   const [onlineUserIds, setOnlineUserIds] = useState(() => new Set());
   const [aiStreamByChat, setAiStreamByChat] = useState({});
   // state to manage the left menu activeSidebar has three values: ["profile", "recentChats", "searchUser"]
@@ -79,6 +80,7 @@ export const ChatProvider = ({ children }) => {
     setUnreadCounts,
     setCurrentUserChats,
     setTypingByChat,
+    setTypingUsersByChat,
     updateLastMessageOfCurrentChat,
     setOnlineUserIds,
     setAiStreamByChat,
@@ -87,6 +89,11 @@ export const ChatProvider = ({ children }) => {
   const isChatTyping = (chatId) => {
     if (!chatId) return false;
     return Boolean(typingByChat[chatId]);
+  };
+
+  const getTypingUsersForChat = (chatId) => {
+    if (!chatId) return [];
+    return typingUsersByChat[chatId] || [];
   };
 
   const resetUnreadCount = (chatId) => {
@@ -211,6 +218,7 @@ export const ChatProvider = ({ children }) => {
         unreadCounts,
         resetUnreadCount,
         isChatTyping,
+        getTypingUsersForChat,
         onlineUserIds,
         aiStreamByChat,
       }}
