@@ -32,12 +32,12 @@ const commonChatAggregation = (viewerId?: Types.ObjectId): PipelineStage[] => {
         pipeline: [
           {
             $project: {
-              password: 0,
-              status: 0,
-              createdAt: 0,
-              updatedAt: 0,
-              roles: 0,
-                isAI: 1,
+              _id: 1,
+              username: 1,
+              email: 1,
+              avatarUrl: 1,
+              bio: 1,
+              isAI: 1,
             },
           },
         ],

@@ -47,14 +47,10 @@ const buildPayload = (
           "You are BaatCheet AI Assistant. Be concise, helpful, and friendly.",
       },
       ...contextMessages,
-      ...(imageUrls.length || !contextMessages.length
-        ? [
-            {
-              role: "user",
-              content: userContent,
-            },
-          ]
-        : []),
+      {
+        role: "user",
+        content: userContent,
+      },
     ],
   };
 };

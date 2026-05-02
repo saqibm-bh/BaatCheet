@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export const useChatSocketListeners = ({
   socket,
@@ -13,6 +13,8 @@ export const useChatSocketListeners = ({
   setOnlineUserIds,
   setAiStreamByChat,
 }) => {
+  const streamErrorTimeoutsRef = useRef({});
+
   // handle on message received event from server
   // ie when a new message is sent to the server and the server sends a event to participants of chat with current message
 
@@ -254,7 +256,11 @@ export const useChatSocketListeners = ({
         },
       }));
 
-      window.setTimeout(() => {
+      if (streamErrorTimeoutsRef.current[payload.chatId]) {
+        window.clearTimeout(streamErrorTimeoutsRef.current[payload.chatId]);
+      }
+
+      streamErrorTimeoutsRef.current[payload.chatId] = window.setTimeout(() => {
         setAiStreamByChat((prev) => {
           const current = prev[payload.chatId];
           if (!current?.isError) return prev;
@@ -262,6 +268,7 @@ export const useChatSocketListeners = ({
           delete next[payload.chatId];
           return next;
         });
+        delete streamErrorTimeoutsRef.current[payload.chatId];
       }, 5000);
     },
     [setAiStreamByChat]
@@ -306,6 +313,11 @@ export const useChatSocketListeners = ({
       socket.off(socketEvents.ACTIVE_USERS_EVENT, onActiveUsers);
       socket.off(socketEvents.USER_ONLINE_EVENT, onUserOnline);
       socket.off(socketEvents.USER_OFFLINE_EVENT, onUserOffline);
+
+      Object.values(streamErrorTimeoutsRef.current).forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      streamErrorTimeoutsRef.current = {};
     };
   }, [
     socket,

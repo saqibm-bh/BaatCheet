@@ -191,6 +191,15 @@ const getLastMessage = (chatId: Types.ObjectId): Promise<any> => {
   return MessageModel.findOne({ chat: chatId }).sort({ createdAt: -1 }).exec();
 };
 
+const getLastPublicMessage = (chatId: Types.ObjectId): Promise<any> => {
+  return MessageModel.findOne({
+    chat: chatId,
+    $or: [{ visibleOnlyTo: null }, { visibleOnlyTo: { $exists: false } }],
+  })
+    .sort({ createdAt: -1 })
+    .exec();
+};
+
 const searchMessagesInChat = async (
   chatId: Types.ObjectId,
   query: string,
@@ -287,6 +296,7 @@ export default {
   deleteMessageById,
   deleteAllMessagesOfChatId,
   getLastMessage,
+  getLastPublicMessage,
   searchMessagesInChat,
   updateMessageContent,
   toggleReaction,

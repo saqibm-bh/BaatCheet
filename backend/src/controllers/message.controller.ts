@@ -161,6 +161,14 @@ export const sendMessage = asyncHandler(
       throw new NotFoundError("No  chat found");
     }
 
+    if (
+      !selectedChat.participants?.some(
+        (participantId) => participantId.toString() === currentUserId.toString()
+      )
+    ) {
+      throw new AuthFailureError("you don't own this chat");
+    }
+
     // hold the files sent by user and creating url to access to it
     const attachmentFiles = await Promise.all(
       (files.attachments || []).map(async (attachment) => {
@@ -260,7 +268,7 @@ export const sendMessage = asyncHandler(
           .map((file) => file?.url)
           .filter((url): url is string => Boolean(url));
 
-        streamOpenRouterResponse({
+        void streamOpenRouterResponse({
           req,
           chatId: new Types.ObjectId(chatId),
           aiUserId,
@@ -270,6 +278,18 @@ export const sendMessage = asyncHandler(
           imageUrls,
           isPrivateQuery: shouldSaveAsPrivate,
           senderId: new Types.ObjectId(currentUserId),
+        }).catch(() => {
+          emitSocketEvent(
+            req,
+            currentUserId.toString(),
+            ChatEventEnum.MESSAGE_STREAM_ERROR_EVENT,
+            {
+              chatId,
+              senderId: aiUserId.toString(),
+              isPrivateQuery: shouldSaveAsPrivate,
+              message: "AI is currently unavailable. Please try again shortly.",
+            }
+          );
         });
       }
     } catch (error) {
@@ -350,7 +370,7 @@ export const deleteMessage = asyncHandler(
     if (
       existingChat?.lastMessage?.toString() === existingMessage._id.toString()
     ) {
-      lastMessage = await messageRepo.getLastMessage(existingChat._id);
+      lastMessage = await messageRepo.getLastPublicMessage(existingChat._id);
 
       await chatRepo.updateChatFields(existingChat._id, {
         $set: {
