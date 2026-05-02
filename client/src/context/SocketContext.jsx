@@ -41,6 +41,8 @@ const socketEvents = {
   MESSAGE_DELETE_EVENT: "messageDeleted",
   MESSAGE_CHUNK_EVENT: "messageChunk",
   MESSAGE_COMPLETE_EVENT: "messageComplete",
+  MESSAGE_STREAM_START_EVENT: "messageStreamStart",
+  MESSAGE_STREAM_ERROR_EVENT: "messageStreamError",
   ACTIVE_USERS_EVENT: "activeUsers",
   USER_ONLINE_EVENT: "userOnline",
   USER_OFFLINE_EVENT: "userOffline",

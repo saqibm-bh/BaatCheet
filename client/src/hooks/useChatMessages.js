@@ -195,11 +195,13 @@ export const useChatMessages = ({
         setAttachments([]);
         setMessages((prevMsgs) => [...prevMsgs, res.data]);
 
-        // update the last message of the chat
-        updateLastMessageOfCurrentChat(
-          currentSelectedChat.current?._id,
-          res.data
-        );
+        if (!res.data?.visibleOnlyTo) {
+          // update the last message of the chat
+          updateLastMessageOfCurrentChat(
+            currentSelectedChat.current?._id,
+            res.data
+          );
+        }
       },
       handleMessageError
     );

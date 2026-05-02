@@ -21,7 +21,14 @@ export const useChatSocketListeners = ({
     const isCurrentChatOpen = currentSelectedChat.current?._id === message.chat;
 
     if (isCurrentChatOpen) {
-      setMessages((prevMsgs) => [...prevMsgs, message]);
+      setMessages((prevMsgs) => {
+        const alreadyExists = prevMsgs.some(
+          (msg) => msg?._id?.toString?.() === message?._id?.toString?.()
+        );
+
+        if (alreadyExists) return prevMsgs;
+        return [...prevMsgs, message];
+      });
       setUnreadCounts((prevCounts) => ({
         ...prevCounts,
         [message.chat]: 0,
@@ -33,8 +40,10 @@ export const useChatSocketListeners = ({
       }));
     }
 
-    // update the last message of the current chat
-    updateLastMessageOfCurrentChat(message.chat, message);
+    if (!message.visibleOnlyTo) {
+      // update the last message of the current chat
+      updateLastMessageOfCurrentChat(message.chat, message);
+    }
   }, [
     currentSelectedChat,
     setMessages,
@@ -187,6 +196,7 @@ export const useChatSocketListeners = ({
           [payload.chatId]: {
             text: `${previousEntry.text || ""}${payload.chunk}`,
             senderId: payload.senderId || previousEntry.senderId,
+            isLoadingFirstChunk: false,
             isPrivateQuery:
               typeof payload.isPrivateQuery === "boolean"
                 ? payload.isPrivateQuery
@@ -194,6 +204,23 @@ export const useChatSocketListeners = ({
           },
         };
       });
+    },
+    [setAiStreamByChat]
+  );
+
+  const onMessageStreamStart = useCallback(
+    (payload) => {
+      if (!payload?.chatId) return;
+
+      setAiStreamByChat((prev) => ({
+        ...prev,
+        [payload.chatId]: {
+          text: "",
+          senderId: payload.senderId,
+          isLoadingFirstChunk: true,
+          isPrivateQuery: Boolean(payload.isPrivateQuery),
+        },
+      }));
     },
     [setAiStreamByChat]
   );
@@ -212,6 +239,34 @@ export const useChatSocketListeners = ({
     [setAiStreamByChat]
   );
 
+  const onMessageStreamError = useCallback(
+    (payload) => {
+      if (!payload?.chatId) return;
+
+      setAiStreamByChat((prev) => ({
+        ...prev,
+        [payload.chatId]: {
+          text: payload.message || "AI is currently unavailable. Please try again shortly.",
+          senderId: payload.senderId,
+          isLoadingFirstChunk: false,
+          isError: true,
+          isPrivateQuery: Boolean(payload.isPrivateQuery),
+        },
+      }));
+
+      window.setTimeout(() => {
+        setAiStreamByChat((prev) => {
+          const current = prev[payload.chatId];
+          if (!current?.isError) return prev;
+          const next = { ...prev };
+          delete next[payload.chatId];
+          return next;
+        });
+      }, 5000);
+    },
+    [setAiStreamByChat]
+  );
+
   useEffect(() => {
     if (!socket) return;
 
@@ -225,8 +280,10 @@ export const useChatSocketListeners = ({
     socket.on(socketEvents.MESSAGE_DELETE_EVENT, onMessageDeleted);
     socket.on(socketEvents.MESSAGE_UPDATE_EVENT, onMessageUpdated);
     socket.on(socketEvents.MESSAGE_REACTION_EVENT, onMessageReactionUpdated);
+    socket.on(socketEvents.MESSAGE_STREAM_START_EVENT, onMessageStreamStart);
     socket.on(socketEvents.MESSAGE_CHUNK_EVENT, onMessageChunk);
     socket.on(socketEvents.MESSAGE_COMPLETE_EVENT, onMessageComplete);
+    socket.on(socketEvents.MESSAGE_STREAM_ERROR_EVENT, onMessageStreamError);
     socket.on(socketEvents.ACTIVE_USERS_EVENT, onActiveUsers);
     socket.on(socketEvents.USER_ONLINE_EVENT, onUserOnline);
     socket.on(socketEvents.USER_OFFLINE_EVENT, onUserOffline);
@@ -242,8 +299,10 @@ export const useChatSocketListeners = ({
       socket.off(socketEvents.MESSAGE_DELETE_EVENT, onMessageDeleted);
       socket.off(socketEvents.MESSAGE_UPDATE_EVENT, onMessageUpdated);
       socket.off(socketEvents.MESSAGE_REACTION_EVENT, onMessageReactionUpdated);
+      socket.off(socketEvents.MESSAGE_STREAM_START_EVENT, onMessageStreamStart);
       socket.off(socketEvents.MESSAGE_CHUNK_EVENT, onMessageChunk);
       socket.off(socketEvents.MESSAGE_COMPLETE_EVENT, onMessageComplete);
+      socket.off(socketEvents.MESSAGE_STREAM_ERROR_EVENT, onMessageStreamError);
       socket.off(socketEvents.ACTIVE_USERS_EVENT, onActiveUsers);
       socket.off(socketEvents.USER_ONLINE_EVENT, onUserOnline);
       socket.off(socketEvents.USER_OFFLINE_EVENT, onUserOffline);
@@ -260,8 +319,10 @@ export const useChatSocketListeners = ({
     onMessageDeleted,
     onMessageUpdated,
     onMessageReactionUpdated,
+    onMessageStreamStart,
     onMessageChunk,
     onMessageComplete,
+    onMessageStreamError,
     onActiveUsers,
     onUserOnline,
     onUserOffline,

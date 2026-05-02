@@ -30,6 +30,8 @@ import { searchChatMessages } from "../api";
 import ReactMarkdown from "react-markdown";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
+const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$))/i;
+
 const MessageCont = ({
   isOwnMessage,
   isGroupChat,
@@ -46,6 +48,7 @@ const MessageCont = ({
   const messageMenuRef = useRef(null);
   const { user } = useAuth();
   const shouldRenderMarkdown = message?.contentFormat === "markdown" || message?.sender?.isAI;
+  const isAiTyping = Boolean(message?.isAiTyping);
   const isPrivateMessage =
     message?.visibleOnlyTo &&
     user?._id &&
@@ -121,14 +124,14 @@ const MessageCont = ({
                 : "ring-1 ring-amber-300/70"
               : ""
           } ${
-            isPrivateMessage ? "border border-dashed border-amber-400/60" : ""
+            isPrivateMessage ? "border border-dashed border-amber-400/60 !bg-amber-50 dark:!bg-amber-950/40 !text-foreground" : ""
           }`}
         >
           {isPrivateMessage && (
             <span className={`text-[10px] font-semibold uppercase tracking-wider mb-1 ${
               isOwnMessage ? "text-primary-foreground/80" : "text-amber-500"
             }`}>
-              Only visible to you
+              Private - only visible to you
             </span>
           )}
           {!isOwnMessage && isGroupChat && message?.sender?.username ? (
@@ -219,7 +222,16 @@ const MessageCont = ({
           ) : null}
           
           <div className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
-            {isEditingMessage ? (
+            {isAiTyping ? (
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                <span>AI is typing</span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{animationDelay: "0ms"}} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{animationDelay: "150ms"}} />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{animationDelay: "300ms"}} />
+                </span>
+              </span>
+            ) : isEditingMessage ? (
               <textarea
                 value={editedContent}
                 onChange={(event) => setEditedContent(event.target.value)}
@@ -462,12 +474,8 @@ export default function ChatsSection() {
   const selectedChatId = currentSelectedChat.current?._id;
   const isTypingInSelectedChat = isChatTyping(selectedChatId);
   const streamingEntry = selectedChatId ? aiStreamByChat?.[selectedChatId] : null;
-  const isStreaming = Boolean(streamingEntry?.text);
-  const normalizedInput = message.trim().toLowerCase();
-  const hasAiTrigger =
-    normalizedInput.startsWith("/ai") ||
-    normalizedInput.includes("@ai") ||
-    normalizedInput.includes("@ai assistant");
+  const isStreaming = Boolean(streamingEntry);
+  const hasAiTrigger = AI_TRIGGER_REGEX.test(message);
 
   const scrollToBottomRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -483,12 +491,16 @@ export default function ChatsSection() {
   const { handleCall, setTargetUserId, targetUserId } = useConnectWebRtc();
 
   const handlePrivateSend = useCallback(() => {
-    sendChatMessage({ isPrivateQuery });
+    sendChatMessage({
+      isAiQuery: hasAiTrigger,
+      isPrivate: hasAiTrigger && isPrivateQuery,
+      isPrivateQuery: hasAiTrigger && isPrivateQuery,
+    });
 
-    if (isPrivateQuery) {
+    if (hasAiTrigger && isPrivateQuery) {
       setIsPrivateQuery(false);
     }
-  }, [sendChatMessage, isPrivateQuery]);
+  }, [sendChatMessage, hasAiTrigger, isPrivateQuery]);
 
   const {
     canSend,
@@ -1296,6 +1308,7 @@ export default function ChatsSection() {
                   _id: "ai-stream",
                   content: streamingEntry?.text || "",
                   contentFormat: "markdown",
+                  isAiTyping: streamingEntry?.isLoadingFirstChunk,
                   visibleOnlyTo: streamingEntry?.isPrivateQuery
                     ? user?._id
                     : null,
@@ -1414,7 +1427,11 @@ export default function ChatsSection() {
           </div>
 
           {/* Text Input with Slash Commands Popup */}
-          <div className="flex-1 bg-muted/50 border border-transparent rounded-[24px] focus-within:bg-background focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-300 relative group flex items-center shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)]">
+          <div className={`flex-1 border rounded-[24px] transition-all duration-300 relative group flex items-center shadow-[inset_0_1px_4px_rgba(0,0,0,0.02)] ${
+            hasAiTrigger
+              ? "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-400/70 ring-4 ring-emerald-400/10 focus-within:border-emerald-500/80 focus-within:ring-emerald-400/20"
+              : "bg-muted/50 border-transparent focus-within:bg-background focus-within:border-primary/30 focus-within:ring-4 focus-within:ring-primary/10"
+          }`}>
             
             {/* Float Menu for Slash Commands */}
             {showSlashCommands && (
@@ -1439,6 +1456,12 @@ export default function ChatsSection() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {hasAiTrigger && (
+              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                AI listening
+              </span>
             )}
 
             <input

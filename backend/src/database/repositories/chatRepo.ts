@@ -2,7 +2,25 @@ import { PipelineStage, Types } from "mongoose";
 import User from "../model/User";
 import Chat, { ChatModel, UpdateChatFields } from "../model/Chat";
 // common aggregation pipeline functions to construct chat schema with common lookups
-const commonChatAggregation = (): PipelineStage[] => {
+const lastMessageVisibilityPipeline = (
+  viewerId?: Types.ObjectId
+): PipelineStage.Match[] => {
+  if (!viewerId) return [];
+
+  return [
+    {
+      $match: {
+        $or: [
+          { visibleOnlyTo: null },
+          { visibleOnlyTo: { $exists: false } },
+          { visibleOnlyTo: viewerId },
+        ],
+      },
+    },
+  ];
+};
+
+const commonChatAggregation = (viewerId?: Types.ObjectId): PipelineStage[] => {
   return [
     {
       // lookup for the participants present
@@ -33,6 +51,7 @@ const commonChatAggregation = (): PipelineStage[] => {
         localField: "lastMessage",
         as: "lastMessage",
         pipeline: [
+          ...lastMessageVisibilityPipeline(viewerId),
           {
             // get details of the sender
             $lookup: {
@@ -85,7 +104,7 @@ const getExistingOneToOneChat = async (
           ],
         },
       },
-      ...commonChatAggregation(),
+      ...commonChatAggregation(userId),
     ]);
   }
 
@@ -103,7 +122,7 @@ const getExistingOneToOneChat = async (
         ],
       },
     },
-    ...commonChatAggregation(),
+    ...commonChatAggregation(userId),
   ]);
 };
 
@@ -142,14 +161,17 @@ const getChatByChatId = (chatId: Types.ObjectId) => {
 };
 
 // retrieve a chat by chatId
-const getChatByChatIdAggregated = (chatId: Types.ObjectId): Promise<any> => {
+const getChatByChatIdAggregated = (
+  chatId: Types.ObjectId,
+  viewerId?: Types.ObjectId
+): Promise<any> => {
   return ChatModel.aggregate([
     {
       $match: {
         _id: chatId,
       },
     },
-    ...commonChatAggregation(),
+    ...commonChatAggregation(viewerId),
   ]);
 };
 
@@ -168,12 +190,15 @@ const getCurrentUserAllChats = (
         updatedAt: -1,
       },
     },
-    ...commonChatAggregation(),
+    ...commonChatAggregation(currentUserId),
   ]);
 };
 
 // get aggregated groupChat
-const getAggregatedGroupChat = (chatId: Types.ObjectId): Promise<any> => {
+const getAggregatedGroupChat = (
+  chatId: Types.ObjectId,
+  viewerId?: Types.ObjectId
+): Promise<any> => {
   return ChatModel.aggregate([
     {
       $match: {
@@ -181,7 +206,7 @@ const getAggregatedGroupChat = (chatId: Types.ObjectId): Promise<any> => {
         isGroupChat: true,
       },
     },
-    ...commonChatAggregation(),
+    ...commonChatAggregation(viewerId),
   ]);
 };
 

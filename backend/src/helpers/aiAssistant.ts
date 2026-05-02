@@ -77,59 +77,44 @@ export const getAiAssistantIdentity = async (): Promise<{
   };
 };
 
+export const AI_TRIGGER_REGEX = /^\s*(?:@ai(?:\s|$)|\/ai(?:\s|$))/i;
+
+export const isAiTriggerMessage = (content: string): boolean => {
+  return AI_TRIGGER_REGEX.test(content || "");
+};
+
+export const stripAiTrigger = (content: string): string => {
+  return (content || "").replace(AI_TRIGGER_REGEX, "").trim();
+};
+
 export const shouldTriggerAiForMessage = (options: {
-  chatIsGroup: boolean;
-  chatParticipants: Types.ObjectId[];
   aiUserId: Types.ObjectId;
   senderId: Types.ObjectId;
   content: string;
-  aiUsername: string;
 }): boolean => {
   const {
-    chatIsGroup,
-    chatParticipants,
     aiUserId,
     senderId,
     content,
-    aiUsername,
   } = options;
 
   if (senderId.toString() === aiUserId.toString()) {
     return false;
   }
 
-  const hasAiParticipant = chatParticipants.some(
-    (participantId) => participantId.toString() === aiUserId.toString()
-  );
-
-  if (!hasAiParticipant) {
-    return false;
-  }
-
-  if (!chatIsGroup) {
-    return true;
-  }
-
-  const normalizedContent = content.trim().toLowerCase();
-  if (!normalizedContent) {
-    return false;
-  }
-
-  const usernameMention = `@${aiUsername.toLowerCase()}`;
-  const shortMention = "@ai";
-
-  return (
-    normalizedContent.startsWith("/ai") ||
-    normalizedContent.includes(usernameMention) ||
-    normalizedContent.includes(shortMention)
-  );
+  return isAiTriggerMessage(content);
 };
 
-export const buildAiContext = async (
+export type AiContextMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export const buildAiContextMessages = async (
   chatId: Types.ObjectId,
   limit = 10,
   viewerId?: Types.ObjectId
-): Promise<string[]> => {
+): Promise<AiContextMessage[]> => {
   const messages = await messageRepo.getRecentMessagesByChatId(chatId, limit);
 
   const visibleMessages = viewerId
@@ -148,6 +133,13 @@ export const buildAiContext = async (
     const normalizedContent =
       content || (hasAttachments ? "[Attachment message]" : "[Empty message]");
 
-    return `${senderName}: ${normalizedContent}`;
+    const normalizedForAi = sender.isAI
+      ? normalizedContent
+      : `${senderName}: ${stripAiTrigger(normalizedContent) || normalizedContent}`;
+
+    return {
+      role: sender.isAI ? "assistant" : "user",
+      content: normalizedForAi,
+    };
   });
 };

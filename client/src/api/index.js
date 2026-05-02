@@ -105,6 +105,14 @@ export const sendMessage = (chatId, content, attachments, options = {}) => {
     formData.append("isPrivateQuery", "true");
   }
 
+  if (options?.isPrivate) {
+    formData.append("isPrivate", "true");
+  }
+
+  if (options?.isAiQuery) {
+    formData.append("isAiQuery", "true");
+  }
+
   if (attachments) {
     attachments?.map((file) => {
       formData.append("attachments", file);

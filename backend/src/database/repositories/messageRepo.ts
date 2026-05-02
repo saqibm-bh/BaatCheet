@@ -15,12 +15,14 @@ import Message, { MessageModel } from "../model/Message";
 type RecentChatMessage = {
   _id: Types.ObjectId;
   content?: string;
+  contentFormat?: "text" | "markdown";
   visibleOnlyTo?: Types.ObjectId | null;
   createdAt: Date;
   sender?: {
     _id?: Types.ObjectId;
     username?: string;
     email?: string;
+    isAI?: boolean;
   } | null;
   attachments?: {
     url: string;
@@ -65,6 +67,16 @@ const chatMessageCommonAggregator = (): PipelineStage[] => {
       },
     },
   ];
+};
+
+const visibleToViewerMatch = (viewerId: Types.ObjectId): PipelineStage.Match["$match"] => {
+  return {
+    $or: [
+      { visibleOnlyTo: null },
+      { visibleOnlyTo: { $exists: false } },
+      { visibleOnlyTo: viewerId },
+    ],
+  };
 };
 
 // find message by Id
@@ -155,11 +167,15 @@ const deleteAllMessagesOfChatId = (chatId: Types.ObjectId): Promise<any> => {
 };
 
 // get all messages aggregated
-const getAllMessagesAggregated = (chatId: Types.ObjectId): Aggregate<any> => {
+const getAllMessagesAggregated = (
+  chatId: Types.ObjectId,
+  viewerId?: Types.ObjectId
+): Aggregate<any> => {
   return MessageModel.aggregate([
     {
       $match: {
         chat: chatId,
+        ...(viewerId ? visibleToViewerMatch(viewerId) : {}),
       },
     },
     {
@@ -178,6 +194,7 @@ const getLastMessage = (chatId: Types.ObjectId): Promise<any> => {
 const searchMessagesInChat = async (
   chatId: Types.ObjectId,
   query: string,
+  viewerId: Types.ObjectId,
   options?: {
     page?: number;
     limit?: number;
@@ -190,6 +207,7 @@ const searchMessagesInChat = async (
 
   const matchStage = {
     chat: chatId,
+    ...visibleToViewerMatch(viewerId),
     content: {
       $regex: escapedQuery,
       $options: "i",

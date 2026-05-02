@@ -22,11 +22,19 @@ import { ChatEventEnum } from "../constants";
 import Chat from "../database/model/Chat";
 import { cloudinary as cloudinaryConfig } from "../config";
 import {
-  buildAiContext,
+  buildAiContextMessages,
   getAiAssistantIdentity,
+  isAiTriggerMessage,
   shouldTriggerAiForMessage,
+  stripAiTrigger,
 } from "../helpers/aiAssistant";
 import { streamOpenRouterResponse } from "../helpers/openRouterStream";
+
+const parseBooleanFlag = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value.toLowerCase() === "true";
+  return false;
+};
 
 export const getAllMessages = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
@@ -54,7 +62,8 @@ export const getAllMessages = asyncHandler(
 
     // get all the messages in aggreated form
     const messages = await messageRepo.getAllMessagesAggregated(
-      new Types.ObjectId(chatId)
+      new Types.ObjectId(chatId),
+      new Types.ObjectId(currentUser?._id)
     );
 
     if (!messages) {
@@ -104,6 +113,7 @@ export const searchMessages = asyncHandler(
     const { messages, total } = await messageRepo.searchMessagesInChat(
       new Types.ObjectId(chatId),
       rawQuery,
+      new Types.ObjectId(currentUser?._id),
       {
         page,
         limit,
@@ -127,7 +137,7 @@ export const searchMessages = asyncHandler(
 // send a message
 export const sendMessage = asyncHandler(
   async (req: ProtectedRequest, res: Response) => {
-    const { content, isPrivateQuery } = req.body;
+    const { content, isPrivate, isPrivateQuery } = req.body;
     const { chatId } = req.params;
 
     const currentUserId = req.user?._id;
@@ -171,19 +181,30 @@ export const sendMessage = asyncHandler(
       })
     );
 
+    const normalizedContent = content || "";
+    const triggerDerivedAiQuery = isAiTriggerMessage(normalizedContent);
+    const shouldAttemptAiQuery = triggerDerivedAiQuery;
+    const shouldSaveAsPrivate =
+      shouldAttemptAiQuery &&
+      (parseBooleanFlag(isPrivate) || parseBooleanFlag(isPrivateQuery));
+
     // create a new message with attachmentsFiles
     const message = await messageRepo.createMessage(
       new Types.ObjectId(currentUserId),
       new Types.ObjectId(chatId),
-      content || "",
-      attachmentFiles
+      normalizedContent,
+      attachmentFiles,
+      "text",
+      shouldSaveAsPrivate ? new Types.ObjectId(currentUserId) : null
     );
 
-    // updating the last message of the chat
-    const updatedChat = await chatRepo.updateChatFields(
-      new Types.ObjectId(chatId),
-      { lastMessage: message._id, updatedAt: new Date() }
-    );
+    if (!shouldSaveAsPrivate) {
+      // updating the last message of the chat
+      await chatRepo.updateChatFields(new Types.ObjectId(chatId), {
+        lastMessage: message._id,
+        updatedAt: new Date(),
+      });
+    }
 
     // structure the message
     const structuredMessage = await messageRepo.getStructuredMessages(
@@ -194,17 +215,26 @@ export const sendMessage = asyncHandler(
       throw new InternalError("error creating message: " + message._id);
     }
 
-    // emit socket event to all user to receive current messsage
-    updatedChat.participants.forEach((participantId: Types.ObjectId) => {
-      if (participantId.toString() === currentUserId.toString()) return;
-
+    if (shouldSaveAsPrivate) {
       emitSocketEvent(
         req,
-        participantId.toString(),
+        currentUserId.toString(),
         ChatEventEnum.MESSAGE_RECEIVED_EVENT,
         structuredMessage[0]
       );
-    });
+    } else {
+      // emit socket event to all users except the sender to receive current message
+      selectedChat.participants.forEach((participantId: Types.ObjectId) => {
+        if (participantId.toString() === currentUserId.toString()) return;
+
+        emitSocketEvent(
+          req,
+          participantId.toString(),
+          ChatEventEnum.MESSAGE_RECEIVED_EVENT,
+          structuredMessage[0]
+        );
+      });
+    }
 
     const response = new SuccessResponse(
       "message sent successfully",
@@ -212,20 +242,16 @@ export const sendMessage = asyncHandler(
     ).send(res);
 
     try {
-      const { userId: aiUserId, username: aiUsername } =
-        await getAiAssistantIdentity();
+      const { userId: aiUserId } = await getAiAssistantIdentity();
 
       const shouldTriggerAi = shouldTriggerAiForMessage({
-        chatIsGroup: Boolean(selectedChat.isGroupChat),
-        chatParticipants: selectedChat.participants,
         aiUserId,
         senderId: new Types.ObjectId(currentUserId),
-        content: content || "",
-        aiUsername,
+        content: normalizedContent,
       });
 
       if (shouldTriggerAi) {
-        const contextLines = await buildAiContext(
+        const contextMessages = await buildAiContextMessages(
           new Types.ObjectId(chatId),
           10,
           new Types.ObjectId(currentUserId)
@@ -239,13 +265,11 @@ export const sendMessage = asyncHandler(
           chatId: new Types.ObjectId(chatId),
           aiUserId,
           participantIds: selectedChat.participants,
-          contextLines,
-          userMessage: content || "",
+          contextMessages,
+          userMessage: stripAiTrigger(normalizedContent),
           imageUrls,
-          isPrivateQuery: Boolean(isPrivateQuery),
+          isPrivateQuery: shouldSaveAsPrivate,
           senderId: new Types.ObjectId(currentUserId),
-        }).catch(() => {
-          // AI stream failures should not block chat delivery.
         });
       }
     } catch (error) {
