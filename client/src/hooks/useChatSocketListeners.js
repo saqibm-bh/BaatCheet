@@ -322,6 +322,29 @@ export const useChatSocketListeners = ({
         hasMessage: Boolean(payload.message),
       });
 
+      // Fallback: if messageReceived is missed, append finalized AI message here.
+      if (payload?.message?._id) {
+        const incomingChatId = normalizeChatId(payload.message.chat || payload.chatId);
+        const selectedChatId = normalizeChatId(currentSelectedChat.current?._id);
+        const isCurrentChatOpen = selectedChatId && incomingChatId
+          ? selectedChatId === incomingChatId
+          : false;
+
+        if (isCurrentChatOpen) {
+          setMessages((prevMsgs) => {
+            const alreadyExists = prevMsgs.some(
+              (msg) => msg?._id?.toString?.() === payload.message._id?.toString?.()
+            );
+            if (alreadyExists) return prevMsgs;
+            return [...prevMsgs, payload.message];
+          });
+        }
+
+        if (!payload.message.visibleOnlyTo) {
+          updateLastMessageOfCurrentChat(incomingChatId, payload.message);
+        }
+      }
+
       setAiStreamByChat((prev) => {
         if (!prev[payload.chatId]) return prev;
         const next = { ...prev };
@@ -329,7 +352,13 @@ export const useChatSocketListeners = ({
         return next;
       });
     },
-    [setAiStreamByChat]
+    [
+      currentSelectedChat,
+      normalizeChatId,
+      setAiStreamByChat,
+      setMessages,
+      updateLastMessageOfCurrentChat,
+    ]
   );
 
   const onMessageStreamError = useCallback(
