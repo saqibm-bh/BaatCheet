@@ -15,9 +15,8 @@
 
 </div>
 
-> Replace this with your best hero GIF or product screenshot.
->
-> `![BaatCheet Hero](./screenshots/your-hero.gif)`
+<img width="1852" height="838" alt="image" src="https://github.com/user-attachments/assets/61b99885-f0da-49cd-b24b-664c32589f92" />
+
 
 BaatCheet is a full-stack real-time chat app that combines live messaging, media sharing, and a built-in Meta AI-style assistant in one experience. The assistant is not tucked away behind a separate page. It lives inside the chat, streams replies live, and can even answer privately inside shared conversations.
 
@@ -290,10 +289,26 @@ BaatCheet/
 > Add 2-4 polished screenshots here once you export them.
 >
 > Example:
+> Dark Mode: 
+> <img width="1855" height="871" alt="image" src="https://github.com/user-attachments/assets/f1db51c2-25f6-4167-96de-22414c3c7ac4" />
+
+> Light Mode: 
+> <img width="1839" height="870" alt="image" src="https://github.com/user-attachments/assets/cbb53037-67e6-40ee-8c30-fb58f4e9fe77" />
 >
-> `![Chat screen](./screenshots/chat-main.png)`
+> In -chat AI Assistant:
+> Private Mode: 
+> <img width="1345" height="858" alt="image" src="https://github.com/user-attachments/assets/3f4a9c38-b3ec-416c-b353-c725cb9bc3e4" />
+> Public Mode:
+> <img width="1333" height="588" alt="image" src="https://github.com/user-attachments/assets/3e92e975-f19b-4d4b-bb85-49ab068f85da" />
 >
-> `![Private AI mode](./screenshots/private-ai.png)`
+> Profile:
+> <img width="1854" height="871" alt="image" src="https://github.com/user-attachments/assets/926aef90-cc25-4f51-9b77-79a5b3324565" />
+
+> <img width="1849" height="871" alt="image" src="https://github.com/user-attachments/assets/677f865c-e681-4df7-a8da-6cdd571bc481" />
+
+
+
+
 
 ## Let's Connect
 
