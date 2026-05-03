@@ -286,22 +286,21 @@ BaatCheet/
 
 ## Screenshots
 
-> Add 2-4 polished screenshots here once you export them.
 >
-> Example:
-> Dark Mode: 
+> **Example**:
+> **Dark Mode**: 
 > <img width="1855" height="871" alt="image" src="https://github.com/user-attachments/assets/f1db51c2-25f6-4167-96de-22414c3c7ac4" />
 
-> Light Mode: 
+> **Light Mode:** 
 > <img width="1839" height="870" alt="image" src="https://github.com/user-attachments/assets/cbb53037-67e6-40ee-8c30-fb58f4e9fe77" />
 >
-> In -chat AI Assistant:
-> Private Mode: 
+> **In-chat AI Assistant:**
+> **Private Mode:** 
 > <img width="1345" height="858" alt="image" src="https://github.com/user-attachments/assets/3f4a9c38-b3ec-416c-b353-c725cb9bc3e4" />
-> Public Mode:
+> **Public Mode:**
 > <img width="1333" height="588" alt="image" src="https://github.com/user-attachments/assets/3e92e975-f19b-4d4b-bb85-49ab068f85da" />
 >
-> Profile:
+> **Profile:**
 > <img width="1854" height="871" alt="image" src="https://github.com/user-attachments/assets/926aef90-cc25-4f51-9b77-79a5b3324565" />
 
 > <img width="1849" height="871" alt="image" src="https://github.com/user-attachments/assets/677f865c-e681-4df7-a8da-6cdd571bc481" />
